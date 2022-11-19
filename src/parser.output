@@ -1,0 +1,258 @@
+Terminals unused in grammar
+
+   STRING_LITERAL
+   INT_NUMBER
+   DOUBLE_NUMBER
+   INT
+   DOUBLE
+   STRING
+   BOOL
+   ENUM
+   POINTER
+   PROCEDURE
+   FUNCTION
+   RETURN
+   IF
+   ELSE
+   FOR
+   SWITCH
+   CASE
+   BREAK
+   DEFAULT
+   PRINT
+   SCAN
+   PRINT_ARRAY
+   TRUE
+   FALSE
+   COMMA
+   COLON
+   SEMI_COLON
+   LPAREN
+   RPAREN
+   LBRACK
+   RBRACK
+   LBRACE
+   RBRACE
+   DOT
+   INCREMENT
+   DECREMENT
+   PLUS
+   MINUS
+   MULT
+   DIVIDE
+   MODULE
+   ADD_ASSIGN
+   SUB_ASSIGN
+   MULT_ASSIGN
+   DIVIDE_ASSIGN
+   MODULE_ASSIGN
+   EQ
+   NEQ
+   LT
+   LE
+   GT
+   GE
+   AND
+   OR
+
+
+Grammar
+
+    0 $accept: prog $end
+
+    1 prog: stmlist
+
+    2 stm: ID ASSIGN ID
+    3    | WHILE ID DO stm
+
+    4 stmlist: stm
+    5        | stmlist SEMI stm
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+error (256)
+ID (258) 2 3
+STRING_LITERAL (259)
+INT_NUMBER (260)
+DOUBLE_NUMBER (261)
+INT (262)
+DOUBLE (263)
+STRING (264)
+BOOL (265)
+ENUM (266)
+POINTER (267)
+PROCEDURE (268)
+FUNCTION (269)
+RETURN (270)
+WHILE (271) 3
+DO (272) 3
+IF (273)
+ELSE (274)
+FOR (275)
+SWITCH (276)
+CASE (277)
+BREAK (278)
+DEFAULT (279)
+PRINT (280)
+SCAN (281)
+PRINT_ARRAY (282)
+TRUE (283)
+FALSE (284)
+COMMA (285)
+COLON (286)
+SEMI (287) 5
+SEMI_COLON (288)
+LPAREN (289)
+RPAREN (290)
+LBRACK (291)
+RBRACK (292)
+LBRACE (293)
+RBRACE (294)
+DOT (295)
+INCREMENT (296)
+DECREMENT (297)
+PLUS (298)
+MINUS (299)
+MULT (300)
+DIVIDE (301)
+MODULE (302)
+ADD_ASSIGN (303)
+SUB_ASSIGN (304)
+MULT_ASSIGN (305)
+DIVIDE_ASSIGN (306)
+MODULE_ASSIGN (307)
+ASSIGN (308) 2
+EQ (309)
+NEQ (310)
+LT (311)
+LE (312)
+GT (313)
+GE (314)
+AND (315)
+OR (316)
+
+
+Nonterminals, with rules where they appear
+
+$accept (62)
+    on left: 0
+prog (63)
+    on left: 1, on right: 0
+stm (64)
+    on left: 2 3, on right: 3 4 5
+stmlist (65)
+    on left: 4 5, on right: 1 5
+
+
+state 0
+
+    0 $accept: . prog $end
+
+    ID     shift, and go to state 1
+    WHILE  shift, and go to state 2
+
+    prog     go to state 3
+    stm      go to state 4
+    stmlist  go to state 5
+
+
+state 1
+
+    2 stm: ID . ASSIGN ID
+
+    ASSIGN  shift, and go to state 6
+
+
+state 2
+
+    3 stm: WHILE . ID DO stm
+
+    ID  shift, and go to state 7
+
+
+state 3
+
+    0 $accept: prog . $end
+
+    $end  shift, and go to state 8
+
+
+state 4
+
+    4 stmlist: stm .
+
+    $default  reduce using rule 4 (stmlist)
+
+
+state 5
+
+    1 prog: stmlist .
+    5 stmlist: stmlist . SEMI stm
+
+    SEMI  shift, and go to state 9
+
+    $default  reduce using rule 1 (prog)
+
+
+state 6
+
+    2 stm: ID ASSIGN . ID
+
+    ID  shift, and go to state 10
+
+
+state 7
+
+    3 stm: WHILE ID . DO stm
+
+    DO  shift, and go to state 11
+
+
+state 8
+
+    0 $accept: prog $end .
+
+    $default  accept
+
+
+state 9
+
+    5 stmlist: stmlist SEMI . stm
+
+    ID     shift, and go to state 1
+    WHILE  shift, and go to state 2
+
+    stm  go to state 12
+
+
+state 10
+
+    2 stm: ID ASSIGN ID .
+
+    $default  reduce using rule 2 (stm)
+
+
+state 11
+
+    3 stm: WHILE ID DO . stm
+
+    ID     shift, and go to state 1
+    WHILE  shift, and go to state 2
+
+    stm  go to state 13
+
+
+state 12
+
+    5 stmlist: stmlist SEMI stm .
+
+    $default  reduce using rule 5 (stmlist)
+
+
+state 13
+
+    3 stm: WHILE ID DO stm .
+
+    $default  reduce using rule 3 (stm)
