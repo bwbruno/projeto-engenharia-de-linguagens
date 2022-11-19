@@ -79,8 +79,11 @@
 "<="               { return LE; }
 ">"                { return GT; }
 ">="               { return GE; }
+
 "&"                { return AND; }
 "|"                { return OR; }
+"!"                { return NOT; }
+
 
 [a-zA-Z][a-zA-Z0-9_]*               {yylval.sValue = strdup(yytext); return ID;}
 

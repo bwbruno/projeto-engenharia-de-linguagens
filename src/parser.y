@@ -28,28 +28,118 @@ extern char * yytext;
 %token <sValue> ID STRING_LITERAL
 %token <iValue> INT_NUMBER
 %token <dValue> DOUBLE_NUMBER
+
 %token INT DOUBLE STRING BOOL ENUM POINTER
 %token PROCEDURE FUNCTION RETURN
 %token WHILE DO IF ELSE FOR SWITCH CASE BREAK DEFAULT PRINT SCAN PRINT_ARRAY
-%token TRUE FALSE COMMA COLON SEMI SEMI_COLON LPAREN RPAREN LBRACK RBRACK LBRACE RBRACE DOT
+%token TRUE FALSE COMMA COLON SEMI_COLON LPAREN RPAREN LBRACK RBRACK LBRACE RBRACE DOT
 %token INCREMENT DECREMENT PLUS MINUS MULT DIVIDE MODULE ADD_ASSIGN SUB_ASSIGN MULT_ASSIGN DIVIDE_ASSIGN MODULE_ASSIGN ASSIGN
-%token EQ NEQ LT LE GT GE AND OR
+%token EQ NEQ LT LE GT GE AND OR NOT
 
 %start prog
 
-%type <sValue> stm
+//%type <sValue> stm
 
 %%
-prog : stmlist {} 
+prog :  subprogrs  {} 
 	 ;
 
-stm : ID ASSIGN ID                          {printf("%s = %s\n", $1, $3);}
-    | WHILE ID DO stm						{}
-	;
-	
-stmlist : stm								{}
-		| stmlist SEMI stm   				{}
-	    ;
+subprogrs : subprog {}
+		  | subprogrs subprog {}
+		  ;
+
+subprog : procedure {}
+		| function {}
+		;
+
+procedure : PROCEDURE ID LPAREN args RPAREN LBRACE stmt_list RBRACE {}
+          ;
+
+function : FUNCTION ID LPAREN args RPAREN COLON type LBRACE stmt_list RBRACE {}
+		 ;
+
+args : type ID {}
+	 | args COMMA type ID {}
+	 |
+	 ;
+
+type : INT      {}
+     | DOUBLE   {}
+     | STRING   {}
+     | BOOL  {}
+     ;
+
+stmt_list : stmt {}
+		  | stmt_list SEMI_COLON stmt {} 
+		  ;
+
+
+
+stmt : assign_stmt                           {}
+     | while_stmt					     	 {}
+	 /*
+	 | if_stmt                               {}
+     | switch_stmt                           {}
+     | for_stmt                              {}
+     | ID INCREMENT                          {}
+     | ID DECREMENT                          {}
+     | decl                                  {}
+     | print_stmt                            {}
+     | scan_stmt                             {}
+	 */
+	 |
+     ;
+
+assign_stmt : ID assign_op expr {}
+			;
+
+assign_op : ASSIGN {}
+          | ADD_ASSIGN {}
+          | SUB_ASSIGN {}
+          | MULT_ASSIGN {}
+          | DIVIDE_ASSIGN {}
+          | MODULE_ASSIGN {}
+          ;
+
+expr : INT_NUMBER {}
+     | DOUBLE_NUMBER {}
+	 | STRING_LITERAL {}
+	 | TRUE {}
+	 | FALSE {}
+	 ;
+
+while_stmt : WHILE LPAREN condition RPAREN LBRACE stmt_list RBRACE {}
+           | DO stmt_list WHILE LPAREN condition RPAREN {}
+		   ;
+
+condition : condition logic_op c_term {}
+          | c_term {}
+		  ;
+
+c_term : ID {}
+       | TRUE {}
+	   | FALSE {}
+	   | comp {}
+	   ;
+	   
+comp : comp_term comp_op comp_term {}
+     ;
+
+comp_term : expr {}
+          ;
+
+comp_op : EQ {}
+        | NEQ {}
+		| GE {}
+		| LE {}
+		| GT {}
+		| LT {}
+		;
+
+logic_op : AND {}
+         | OR {}
+		 | NOT {}
+		 ;
 %%
 
 int main (void) {
