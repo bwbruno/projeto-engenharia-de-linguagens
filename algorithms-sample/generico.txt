@@ -1,0 +1,13 @@
+function main() : int
+{
+    double x = 10.5;
+    double y = 25.5;
+    int c = 20;
+    
+
+    do {
+        print(x);
+    } while(true);
+
+    return 0;
+}

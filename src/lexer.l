@@ -24,10 +24,12 @@
 "int"                { return INT; }
 "double"                { return DOUBLE; }
 "bool"                { return BOOL; }
+"float"                { return FLOAT; }
 "string"                { return STRING; }
 "enum"                { return ENUM; }
 "pointer"                { return POINTER; }
 
+"main"                     { return MAIN; }
 "procedure"                { return PROCEDURE; }
 "function"                { return FUNCTION; }
 "return"                { return RETURN; }

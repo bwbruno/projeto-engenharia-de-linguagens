@@ -1,11 +1,15 @@
+Nonterminals useless in grammar
+
+   print_stmt
+   scan_stmt
+
+
 Terminals unused in grammar
 
    ENUM
    POINTER
    RETURN
-   IF
    ELSE
-   FOR
    SWITCH
    CASE
    BREAK
@@ -13,288 +17,371 @@ Terminals unused in grammar
    PRINT
    SCAN
    PRINT_ARRAY
-   LBRACK
-   RBRACK
    DOT
-   INCREMENT
-   DECREMENT
-   PLUS
-   MINUS
-   MULT
-   DIVIDE
-   MODULE
 
 
-State 31 conflicts: 1 shift/reduce
-State 46 conflicts: 1 shift/reduce
+Rules useless in grammar
+
+   81 print_stmt: PRINT LPAREN expr RPAREN
+
+   82 scan_stmt: SCAN LPAREN ID RPAREN
+
+
+State 9 conflicts: 1 shift/reduce
+State 17 conflicts: 5 shift/reduce
+State 44 conflicts: 1 shift/reduce
+State 66 conflicts: 12 shift/reduce
+State 85 conflicts: 13 shift/reduce
+State 96 conflicts: 12 shift/reduce
+State 104 conflicts: 12 shift/reduce
+State 105 conflicts: 12 shift/reduce
+State 114 conflicts: 13 shift/reduce
+State 120 conflicts: 13 shift/reduce
+State 121 conflicts: 13 shift/reduce
+State 142 conflicts: 12 shift/reduce
+State 146 conflicts: 12 shift/reduce
+State 150 conflicts: 12 shift/reduce
+State 151 conflicts: 13 shift/reduce
+State 153 conflicts: 13 shift/reduce
+State 156 conflicts: 13 shift/reduce
 
 
 Grammar
 
     0 $accept: prog $end
 
-    1 prog: subprogrs
+    1 prog: decls subprogrs
 
-    2 subprogrs: subprog
-    3          | subprogrs subprog
+    2 decls: decl SEMI_COLON decls
+    3      | /* empty */
 
-    4 subprog: procedure
-    5        | function
+    4 decl: type dimen_op ids
 
-    6 procedure: PROCEDURE ID LPAREN args RPAREN LBRACE stmt_list RBRACE
+    5 dimen_op: LBRACK RBRACK
+    6         | dimen_op LBRACK RBRACK
+    7         | /* empty */
 
-    7 function: FUNCTION ID LPAREN args RPAREN COLON type LBRACE stmt_list RBRACE
+    8 ids: ids COMMA ID
+    9    | ID assign_op expr
+   10    | ID
+   11    | ids COMMA ID assign_op expr
 
-    8 args: type ID
-    9     | args COMMA type ID
-   10     | /* empty */
+   12 subprogrs: subprog
+   13          | subprogrs subprog
 
-   11 type: INT
-   12     | DOUBLE
-   13     | STRING
-   14     | BOOL
+   14 subprog: procedure
+   15        | function
 
-   15 stmt_list: stmt
-   16          | stmt_list SEMI_COLON stmt
+   16 procedure: PROCEDURE ID LPAREN args_op RPAREN LBRACE stmt_list RBRACE
 
-   17 stmt: assign_stmt
-   18     | while_stmt
-   19     | /* empty */
+   17 function: FUNCTION ID LPAREN args_op RPAREN COLON type LBRACE stmt_list RBRACE
+   18         | FUNCTION MAIN LPAREN args_op RPAREN COLON type LBRACE stmt_list RBRACE
 
-   20 assign_stmt: ID assign_op expr
+   19 args_op: args
+   20        | /* empty */
 
-   21 assign_op: ASSIGN
-   22          | ADD_ASSIGN
-   23          | SUB_ASSIGN
-   24          | MULT_ASSIGN
-   25          | DIVIDE_ASSIGN
-   26          | MODULE_ASSIGN
+   21 args: args COMMA arg
+   22     | arg
 
-   27 expr: INT_NUMBER
-   28     | DOUBLE_NUMBER
-   29     | STRING_LITERAL
-   30     | TRUE
-   31     | FALSE
+   23 arg: type dimen_op ID
 
-   32 while_stmt: WHILE LPAREN condition RPAREN LBRACE stmt_list RBRACE
-   33           | DO stmt_list WHILE LPAREN condition RPAREN
+   24 type: INT
+   25     | DOUBLE
+   26     | FLOAT
+   27     | STRING
+   28     | BOOL
 
-   34 condition: condition logic_op c_term
-   35          | c_term
+   29 stmt_list: stmt
+   30          | stmt_list stmt
 
-   36 c_term: ID
-   37       | TRUE
-   38       | FALSE
-   39       | comp
+   31 stmt: while_stmt
+   32     | if_stmt
+   33     | decls
+   34     | for_stmt
+   35     | inc_dec SEMI_COLON
 
-   40 comp: comp_term comp_op comp_term
+   36 assign_stmt: ID assign_op expr
+   37            | type ID assign_op expr
 
-   41 comp_term: expr
+   38 assign_op: ASSIGN
+   39          | ADD_ASSIGN
+   40          | SUB_ASSIGN
+   41          | MULT_ASSIGN
+   42          | DIVIDE_ASSIGN
+   43          | MODULE_ASSIGN
 
-   42 comp_op: EQ
-   43        | NEQ
-   44        | GE
-   45        | LE
-   46        | GT
-   47        | LT
+   44 expr: ID
+   45     | INT_NUMBER
+   46     | DOUBLE_NUMBER
+   47     | STRING_LITERAL
+   48     | TRUE
+   49     | FALSE
+   50     | expr PLUS expr
+   51     | expr MINUS expr
+   52     | expr MULT expr
+   53     | expr DIVIDE expr
+   54     | expr MODULE expr
 
-   48 logic_op: AND
-   49         | OR
-   50         | NOT
+   55 while_stmt: WHILE LPAREN condition RPAREN LBRACE stmt_list RBRACE
+   56           | DO LBRACE stmt_list RBRACE WHILE LPAREN condition RPAREN SEMI_COLON
+
+   57 if_stmt: IF LPAREN condition RPAREN LBRACE stmt_list RBRACE
+
+   58 for_stmt: FOR LPAREN for_args RPAREN LBRACE stmt_list RBRACE
+
+   59 for_args: assign_stmt SEMI_COLON ID comp_op ID SEMI_COLON inc_dec
+
+   60 inc_dec: ID INCREMENT
+   61        | ID DECREMENT
+   62        | INCREMENT ID
+   63        | DECREMENT ID
+
+   64 condition: condition logic_op c_term
+   65          | c_term
+
+   66 c_term: ID
+   67       | TRUE
+   68       | FALSE
+   69       | comp
+
+   70 comp: comp_term comp_op comp_term
+
+   71 comp_term: expr
+
+   72 comp_op: EQ
+   73        | NEQ
+   74        | GE
+   75        | LE
+   76        | GT
+   77        | LT
+
+   78 logic_op: AND
+   79         | OR
+   80         | NOT
 
 
 Terminals, with rules where they appear
 
 $end (0) 0
 error (256)
-ID (258) 6 7 8 9 20 36
-STRING_LITERAL (259) 29
-INT_NUMBER (260) 27
-DOUBLE_NUMBER (261) 28
-INT (262) 11
-DOUBLE (263) 12
-STRING (264) 13
-BOOL (265) 14
-ENUM (266)
-POINTER (267)
-PROCEDURE (268) 6
-FUNCTION (269) 7
-RETURN (270)
-WHILE (271) 32 33
-DO (272) 33
-IF (273)
-ELSE (274)
-FOR (275)
-SWITCH (276)
-CASE (277)
-BREAK (278)
-DEFAULT (279)
-PRINT (280)
-SCAN (281)
-PRINT_ARRAY (282)
-TRUE (283) 30 37
-FALSE (284) 31 38
-COMMA (285) 9
-COLON (286) 7
-SEMI_COLON (287) 16
-LPAREN (288) 6 7 32 33
-RPAREN (289) 6 7 32 33
-LBRACK (290)
-RBRACK (291)
-LBRACE (292) 6 7 32
-RBRACE (293) 6 7 32
-DOT (294)
-INCREMENT (295)
-DECREMENT (296)
-PLUS (297)
-MINUS (298)
-MULT (299)
-DIVIDE (300)
-MODULE (301)
-ADD_ASSIGN (302) 22
-SUB_ASSIGN (303) 23
-MULT_ASSIGN (304) 24
-DIVIDE_ASSIGN (305) 25
-MODULE_ASSIGN (306) 26
-ASSIGN (307) 21
-EQ (308) 42
-NEQ (309) 43
-LT (310) 47
-LE (311) 45
-GT (312) 46
-GE (313) 44
-AND (314) 48
-OR (315) 49
-NOT (316) 50
+ID (258) 8 9 10 11 16 17 23 36 37 44 59 60 61 62 63 66
+STRING_LITERAL (259) 47
+INT_NUMBER (260) 45
+DOUBLE_NUMBER (261) 46
+INT (262) 24
+FLOAT (263) 26
+DOUBLE (264) 25
+STRING (265) 27
+BOOL (266) 28
+ENUM (267)
+POINTER (268)
+MAIN (269) 18
+PROCEDURE (270) 16
+FUNCTION (271) 17 18
+RETURN (272)
+WHILE (273) 55 56
+DO (274) 56
+IF (275) 57
+ELSE (276)
+FOR (277) 58
+SWITCH (278)
+CASE (279)
+BREAK (280)
+DEFAULT (281)
+PRINT (282)
+SCAN (283)
+PRINT_ARRAY (284)
+TRUE (285) 48 67
+FALSE (286) 49 68
+COMMA (287) 8 11 21
+COLON (288) 17 18
+SEMI_COLON (289) 2 35 56 59
+LPAREN (290) 16 17 18 55 56 57 58
+RPAREN (291) 16 17 18 55 56 57 58
+LBRACK (292) 5 6
+RBRACK (293) 5 6
+LBRACE (294) 16 17 18 55 56 57 58
+RBRACE (295) 16 17 18 55 56 57 58
+DOT (296)
+INCREMENT (297) 60 62
+DECREMENT (298) 61 63
+PLUS (299) 50
+MINUS (300) 51
+MULT (301) 52
+DIVIDE (302) 53
+MODULE (303) 54
+ADD_ASSIGN (304) 39
+SUB_ASSIGN (305) 40
+MULT_ASSIGN (306) 41
+DIVIDE_ASSIGN (307) 42
+MODULE_ASSIGN (308) 43
+ASSIGN (309) 38
+EQ (310) 72
+NEQ (311) 73
+LT (312) 77
+LE (313) 75
+GT (314) 76
+GE (315) 74
+AND (316) 78
+OR (317) 79
+NOT (318) 80
 
 
 Nonterminals, with rules where they appear
 
-$accept (62)
+$accept (64)
     on left: 0
-prog (63)
+prog (65)
     on left: 1, on right: 0
-subprogrs (64)
-    on left: 2 3, on right: 1 3
-subprog (65)
-    on left: 4 5, on right: 2 3
-procedure (66)
-    on left: 6, on right: 4
-function (67)
-    on left: 7, on right: 5
-args (68)
-    on left: 8 9 10, on right: 6 7 9
-type (69)
-    on left: 11 12 13 14, on right: 7 8 9
-stmt_list (70)
-    on left: 15 16, on right: 6 7 16 32 33
-stmt (71)
-    on left: 17 18 19, on right: 15 16
-assign_stmt (72)
-    on left: 20, on right: 17
-assign_op (73)
-    on left: 21 22 23 24 25 26, on right: 20
-expr (74)
-    on left: 27 28 29 30 31, on right: 20 41
-while_stmt (75)
-    on left: 32 33, on right: 18
-condition (76)
-    on left: 34 35, on right: 32 33 34
-c_term (77)
-    on left: 36 37 38 39, on right: 34 35
-comp (78)
-    on left: 40, on right: 39
-comp_term (79)
-    on left: 41, on right: 40
-comp_op (80)
-    on left: 42 43 44 45 46 47, on right: 40
-logic_op (81)
-    on left: 48 49 50, on right: 34
+decls (66)
+    on left: 2 3, on right: 1 2 33
+decl (67)
+    on left: 4, on right: 2
+dimen_op (68)
+    on left: 5 6 7, on right: 4 6 23
+ids (69)
+    on left: 8 9 10 11, on right: 4 8 11
+subprogrs (70)
+    on left: 12 13, on right: 1 13
+subprog (71)
+    on left: 14 15, on right: 12 13
+procedure (72)
+    on left: 16, on right: 14
+function (73)
+    on left: 17 18, on right: 15
+args_op (74)
+    on left: 19 20, on right: 16 17 18
+args (75)
+    on left: 21 22, on right: 19 21
+arg (76)
+    on left: 23, on right: 21 22
+type (77)
+    on left: 24 25 26 27 28, on right: 4 17 18 23 37
+stmt_list (78)
+    on left: 29 30, on right: 16 17 18 30 55 56 57 58
+stmt (79)
+    on left: 31 32 33 34 35, on right: 29 30
+assign_stmt (80)
+    on left: 36 37, on right: 59
+assign_op (81)
+    on left: 38 39 40 41 42 43, on right: 9 11 36 37
+expr (82)
+    on left: 44 45 46 47 48 49 50 51 52 53 54, on right: 9 11 36 37
+    50 51 52 53 54 71
+while_stmt (83)
+    on left: 55 56, on right: 31
+if_stmt (84)
+    on left: 57, on right: 32
+for_stmt (85)
+    on left: 58, on right: 34
+for_args (86)
+    on left: 59, on right: 58
+inc_dec (87)
+    on left: 60 61 62 63, on right: 35 59
+condition (88)
+    on left: 64 65, on right: 55 56 57 64
+c_term (89)
+    on left: 66 67 68 69, on right: 64 65
+comp (90)
+    on left: 70, on right: 69
+comp_term (91)
+    on left: 71, on right: 70
+comp_op (92)
+    on left: 72 73 74 75 76 77, on right: 59 70
+logic_op (93)
+    on left: 78 79 80, on right: 64
 
 
 state 0
 
     0 $accept: . prog $end
 
-    PROCEDURE  shift, and go to state 1
-    FUNCTION   shift, and go to state 2
+    INT     shift, and go to state 1
+    FLOAT   shift, and go to state 2
+    DOUBLE  shift, and go to state 3
+    STRING  shift, and go to state 4
+    BOOL    shift, and go to state 5
 
-    prog       go to state 3
-    subprogrs  go to state 4
-    subprog    go to state 5
-    procedure  go to state 6
-    function   go to state 7
+    $default  reduce using rule 3 (decls)
+
+    prog   go to state 6
+    decls  go to state 7
+    decl   go to state 8
+    type   go to state 9
 
 
 state 1
 
-    6 procedure: PROCEDURE . ID LPAREN args RPAREN LBRACE stmt_list RBRACE
+   24 type: INT .
 
-    ID  shift, and go to state 8
+    $default  reduce using rule 24 (type)
 
 
 state 2
 
-    7 function: FUNCTION . ID LPAREN args RPAREN COLON type LBRACE stmt_list RBRACE
+   26 type: FLOAT .
 
-    ID  shift, and go to state 9
+    $default  reduce using rule 26 (type)
 
 
 state 3
+
+   25 type: DOUBLE .
+
+    $default  reduce using rule 25 (type)
+
+
+state 4
+
+   27 type: STRING .
+
+    $default  reduce using rule 27 (type)
+
+
+state 5
+
+   28 type: BOOL .
+
+    $default  reduce using rule 28 (type)
+
+
+state 6
 
     0 $accept: prog . $end
 
     $end  shift, and go to state 10
 
 
-state 4
-
-    1 prog: subprogrs .
-    3 subprogrs: subprogrs . subprog
-
-    PROCEDURE  shift, and go to state 1
-    FUNCTION   shift, and go to state 2
-
-    $default  reduce using rule 1 (prog)
-
-    subprog    go to state 11
-    procedure  go to state 6
-    function   go to state 7
-
-
-state 5
-
-    2 subprogrs: subprog .
-
-    $default  reduce using rule 2 (subprogrs)
-
-
-state 6
-
-    4 subprog: procedure .
-
-    $default  reduce using rule 4 (subprog)
-
-
 state 7
 
-    5 subprog: function .
+    1 prog: decls . subprogrs
 
-    $default  reduce using rule 5 (subprog)
+    PROCEDURE  shift, and go to state 11
+    FUNCTION   shift, and go to state 12
+
+    subprogrs  go to state 13
+    subprog    go to state 14
+    procedure  go to state 15
+    function   go to state 16
 
 
 state 8
 
-    6 procedure: PROCEDURE ID . LPAREN args RPAREN LBRACE stmt_list RBRACE
+    2 decls: decl . SEMI_COLON decls
 
-    LPAREN  shift, and go to state 12
+    SEMI_COLON  shift, and go to state 17
 
 
 state 9
 
-    7 function: FUNCTION ID . LPAREN args RPAREN COLON type LBRACE stmt_list RBRACE
+    4 decl: type . dimen_op ids
 
-    LPAREN  shift, and go to state 13
+    LBRACK  shift, and go to state 18
+
+    LBRACK    [reduce using rule 7 (dimen_op)]
+    $default  reduce using rule 7 (dimen_op)
+
+    dimen_op  go to state 19
 
 
 state 10
@@ -306,696 +393,1975 @@ state 10
 
 state 11
 
-    3 subprogrs: subprogrs subprog .
+   16 procedure: PROCEDURE . ID LPAREN args_op RPAREN LBRACE stmt_list RBRACE
 
-    $default  reduce using rule 3 (subprogrs)
+    ID  shift, and go to state 20
 
 
 state 12
 
-    6 procedure: PROCEDURE ID LPAREN . args RPAREN LBRACE stmt_list RBRACE
+   17 function: FUNCTION . ID LPAREN args_op RPAREN COLON type LBRACE stmt_list RBRACE
+   18         | FUNCTION . MAIN LPAREN args_op RPAREN COLON type LBRACE stmt_list RBRACE
 
-    INT     shift, and go to state 14
-    DOUBLE  shift, and go to state 15
-    STRING  shift, and go to state 16
-    BOOL    shift, and go to state 17
-
-    $default  reduce using rule 10 (args)
-
-    args  go to state 18
-    type  go to state 19
+    ID    shift, and go to state 21
+    MAIN  shift, and go to state 22
 
 
 state 13
 
-    7 function: FUNCTION ID LPAREN . args RPAREN COLON type LBRACE stmt_list RBRACE
+    1 prog: decls subprogrs .
+   13 subprogrs: subprogrs . subprog
 
-    INT     shift, and go to state 14
-    DOUBLE  shift, and go to state 15
-    STRING  shift, and go to state 16
-    BOOL    shift, and go to state 17
+    PROCEDURE  shift, and go to state 11
+    FUNCTION   shift, and go to state 12
 
-    $default  reduce using rule 10 (args)
+    $default  reduce using rule 1 (prog)
 
-    args  go to state 20
-    type  go to state 19
+    subprog    go to state 23
+    procedure  go to state 15
+    function   go to state 16
 
 
 state 14
 
-   11 type: INT .
+   12 subprogrs: subprog .
 
-    $default  reduce using rule 11 (type)
+    $default  reduce using rule 12 (subprogrs)
 
 
 state 15
 
-   12 type: DOUBLE .
+   14 subprog: procedure .
 
-    $default  reduce using rule 12 (type)
+    $default  reduce using rule 14 (subprog)
 
 
 state 16
 
-   13 type: STRING .
+   15 subprog: function .
 
-    $default  reduce using rule 13 (type)
+    $default  reduce using rule 15 (subprog)
 
 
 state 17
 
-   14 type: BOOL .
+    2 decls: decl SEMI_COLON . decls
 
-    $default  reduce using rule 14 (type)
+    INT     shift, and go to state 1
+    FLOAT   shift, and go to state 2
+    DOUBLE  shift, and go to state 3
+    STRING  shift, and go to state 4
+    BOOL    shift, and go to state 5
+
+    INT       [reduce using rule 3 (decls)]
+    FLOAT     [reduce using rule 3 (decls)]
+    DOUBLE    [reduce using rule 3 (decls)]
+    STRING    [reduce using rule 3 (decls)]
+    BOOL      [reduce using rule 3 (decls)]
+    $default  reduce using rule 3 (decls)
+
+    decls  go to state 24
+    decl   go to state 8
+    type   go to state 9
 
 
 state 18
 
-    6 procedure: PROCEDURE ID LPAREN args . RPAREN LBRACE stmt_list RBRACE
-    9 args: args . COMMA type ID
+    5 dimen_op: LBRACK . RBRACK
 
-    COMMA   shift, and go to state 21
-    RPAREN  shift, and go to state 22
+    RBRACK  shift, and go to state 25
 
 
 state 19
 
-    8 args: type . ID
+    4 decl: type dimen_op . ids
+    6 dimen_op: dimen_op . LBRACK RBRACK
 
-    ID  shift, and go to state 23
+    ID      shift, and go to state 26
+    LBRACK  shift, and go to state 27
+
+    ids  go to state 28
 
 
 state 20
 
-    7 function: FUNCTION ID LPAREN args . RPAREN COLON type LBRACE stmt_list RBRACE
-    9 args: args . COMMA type ID
+   16 procedure: PROCEDURE ID . LPAREN args_op RPAREN LBRACE stmt_list RBRACE
 
-    COMMA   shift, and go to state 21
-    RPAREN  shift, and go to state 24
+    LPAREN  shift, and go to state 29
 
 
 state 21
 
-    9 args: args COMMA . type ID
+   17 function: FUNCTION ID . LPAREN args_op RPAREN COLON type LBRACE stmt_list RBRACE
 
-    INT     shift, and go to state 14
-    DOUBLE  shift, and go to state 15
-    STRING  shift, and go to state 16
-    BOOL    shift, and go to state 17
-
-    type  go to state 25
+    LPAREN  shift, and go to state 30
 
 
 state 22
 
-    6 procedure: PROCEDURE ID LPAREN args RPAREN . LBRACE stmt_list RBRACE
+   18 function: FUNCTION MAIN . LPAREN args_op RPAREN COLON type LBRACE stmt_list RBRACE
 
-    LBRACE  shift, and go to state 26
+    LPAREN  shift, and go to state 31
 
 
 state 23
 
-    8 args: type ID .
+   13 subprogrs: subprogrs subprog .
 
-    $default  reduce using rule 8 (args)
+    $default  reduce using rule 13 (subprogrs)
 
 
 state 24
 
-    7 function: FUNCTION ID LPAREN args RPAREN . COLON type LBRACE stmt_list RBRACE
+    2 decls: decl SEMI_COLON decls .
 
-    COLON  shift, and go to state 27
+    $default  reduce using rule 2 (decls)
 
 
 state 25
 
-    9 args: args COMMA type . ID
+    5 dimen_op: LBRACK RBRACK .
 
-    ID  shift, and go to state 28
+    $default  reduce using rule 5 (dimen_op)
 
 
 state 26
 
-    6 procedure: PROCEDURE ID LPAREN args RPAREN LBRACE . stmt_list RBRACE
+    9 ids: ID . assign_op expr
+   10    | ID .
 
-    ID     shift, and go to state 29
-    WHILE  shift, and go to state 30
-    DO     shift, and go to state 31
+    ADD_ASSIGN     shift, and go to state 32
+    SUB_ASSIGN     shift, and go to state 33
+    MULT_ASSIGN    shift, and go to state 34
+    DIVIDE_ASSIGN  shift, and go to state 35
+    MODULE_ASSIGN  shift, and go to state 36
+    ASSIGN         shift, and go to state 37
 
-    $default  reduce using rule 19 (stmt)
+    $default  reduce using rule 10 (ids)
 
-    stmt_list    go to state 32
-    stmt         go to state 33
-    assign_stmt  go to state 34
-    while_stmt   go to state 35
+    assign_op  go to state 38
 
 
 state 27
 
-    7 function: FUNCTION ID LPAREN args RPAREN COLON . type LBRACE stmt_list RBRACE
+    6 dimen_op: dimen_op LBRACK . RBRACK
 
-    INT     shift, and go to state 14
-    DOUBLE  shift, and go to state 15
-    STRING  shift, and go to state 16
-    BOOL    shift, and go to state 17
-
-    type  go to state 36
+    RBRACK  shift, and go to state 39
 
 
 state 28
 
-    9 args: args COMMA type ID .
+    4 decl: type dimen_op ids .
+    8 ids: ids . COMMA ID
+   11    | ids . COMMA ID assign_op expr
 
-    $default  reduce using rule 9 (args)
+    COMMA  shift, and go to state 40
+
+    $default  reduce using rule 4 (decl)
 
 
 state 29
 
-   20 assign_stmt: ID . assign_op expr
+   16 procedure: PROCEDURE ID LPAREN . args_op RPAREN LBRACE stmt_list RBRACE
 
-    ADD_ASSIGN     shift, and go to state 37
-    SUB_ASSIGN     shift, and go to state 38
-    MULT_ASSIGN    shift, and go to state 39
-    DIVIDE_ASSIGN  shift, and go to state 40
-    MODULE_ASSIGN  shift, and go to state 41
-    ASSIGN         shift, and go to state 42
+    INT     shift, and go to state 1
+    FLOAT   shift, and go to state 2
+    DOUBLE  shift, and go to state 3
+    STRING  shift, and go to state 4
+    BOOL    shift, and go to state 5
 
-    assign_op  go to state 43
+    $default  reduce using rule 20 (args_op)
+
+    args_op  go to state 41
+    args     go to state 42
+    arg      go to state 43
+    type     go to state 44
 
 
 state 30
 
-   32 while_stmt: WHILE . LPAREN condition RPAREN LBRACE stmt_list RBRACE
+   17 function: FUNCTION ID LPAREN . args_op RPAREN COLON type LBRACE stmt_list RBRACE
 
-    LPAREN  shift, and go to state 44
+    INT     shift, and go to state 1
+    FLOAT   shift, and go to state 2
+    DOUBLE  shift, and go to state 3
+    STRING  shift, and go to state 4
+    BOOL    shift, and go to state 5
+
+    $default  reduce using rule 20 (args_op)
+
+    args_op  go to state 45
+    args     go to state 42
+    arg      go to state 43
+    type     go to state 44
 
 
 state 31
 
-   33 while_stmt: DO . stmt_list WHILE LPAREN condition RPAREN
+   18 function: FUNCTION MAIN LPAREN . args_op RPAREN COLON type LBRACE stmt_list RBRACE
 
-    ID     shift, and go to state 29
-    WHILE  shift, and go to state 30
-    DO     shift, and go to state 31
+    INT     shift, and go to state 1
+    FLOAT   shift, and go to state 2
+    DOUBLE  shift, and go to state 3
+    STRING  shift, and go to state 4
+    BOOL    shift, and go to state 5
 
-    WHILE     [reduce using rule 19 (stmt)]
-    $default  reduce using rule 19 (stmt)
+    $default  reduce using rule 20 (args_op)
 
-    stmt_list    go to state 45
-    stmt         go to state 33
-    assign_stmt  go to state 34
-    while_stmt   go to state 35
+    args_op  go to state 46
+    args     go to state 42
+    arg      go to state 43
+    type     go to state 44
 
 
 state 32
 
-    6 procedure: PROCEDURE ID LPAREN args RPAREN LBRACE stmt_list . RBRACE
-   16 stmt_list: stmt_list . SEMI_COLON stmt
+   39 assign_op: ADD_ASSIGN .
 
-    SEMI_COLON  shift, and go to state 46
-    RBRACE      shift, and go to state 47
+    $default  reduce using rule 39 (assign_op)
 
 
 state 33
 
-   15 stmt_list: stmt .
+   40 assign_op: SUB_ASSIGN .
 
-    $default  reduce using rule 15 (stmt_list)
+    $default  reduce using rule 40 (assign_op)
 
 
 state 34
 
-   17 stmt: assign_stmt .
+   41 assign_op: MULT_ASSIGN .
 
-    $default  reduce using rule 17 (stmt)
+    $default  reduce using rule 41 (assign_op)
 
 
 state 35
 
-   18 stmt: while_stmt .
+   42 assign_op: DIVIDE_ASSIGN .
 
-    $default  reduce using rule 18 (stmt)
+    $default  reduce using rule 42 (assign_op)
 
 
 state 36
 
-    7 function: FUNCTION ID LPAREN args RPAREN COLON type . LBRACE stmt_list RBRACE
+   43 assign_op: MODULE_ASSIGN .
 
-    LBRACE  shift, and go to state 48
+    $default  reduce using rule 43 (assign_op)
 
 
 state 37
 
-   22 assign_op: ADD_ASSIGN .
+   38 assign_op: ASSIGN .
 
-    $default  reduce using rule 22 (assign_op)
+    $default  reduce using rule 38 (assign_op)
 
 
 state 38
 
-   23 assign_op: SUB_ASSIGN .
+    9 ids: ID assign_op . expr
 
-    $default  reduce using rule 23 (assign_op)
+    ID              shift, and go to state 47
+    STRING_LITERAL  shift, and go to state 48
+    INT_NUMBER      shift, and go to state 49
+    DOUBLE_NUMBER   shift, and go to state 50
+    TRUE            shift, and go to state 51
+    FALSE           shift, and go to state 52
+
+    expr  go to state 53
 
 
 state 39
 
-   24 assign_op: MULT_ASSIGN .
+    6 dimen_op: dimen_op LBRACK RBRACK .
 
-    $default  reduce using rule 24 (assign_op)
+    $default  reduce using rule 6 (dimen_op)
 
 
 state 40
 
-   25 assign_op: DIVIDE_ASSIGN .
+    8 ids: ids COMMA . ID
+   11    | ids COMMA . ID assign_op expr
 
-    $default  reduce using rule 25 (assign_op)
+    ID  shift, and go to state 54
 
 
 state 41
 
-   26 assign_op: MODULE_ASSIGN .
+   16 procedure: PROCEDURE ID LPAREN args_op . RPAREN LBRACE stmt_list RBRACE
 
-    $default  reduce using rule 26 (assign_op)
+    RPAREN  shift, and go to state 55
 
 
 state 42
 
-   21 assign_op: ASSIGN .
+   19 args_op: args .
+   21 args: args . COMMA arg
 
-    $default  reduce using rule 21 (assign_op)
+    COMMA  shift, and go to state 56
+
+    $default  reduce using rule 19 (args_op)
 
 
 state 43
 
-   20 assign_stmt: ID assign_op . expr
+   22 args: arg .
 
-    STRING_LITERAL  shift, and go to state 49
-    INT_NUMBER      shift, and go to state 50
-    DOUBLE_NUMBER   shift, and go to state 51
-    TRUE            shift, and go to state 52
-    FALSE           shift, and go to state 53
-
-    expr  go to state 54
+    $default  reduce using rule 22 (args)
 
 
 state 44
 
-   32 while_stmt: WHILE LPAREN . condition RPAREN LBRACE stmt_list RBRACE
+   23 arg: type . dimen_op ID
 
-    ID              shift, and go to state 55
-    STRING_LITERAL  shift, and go to state 49
-    INT_NUMBER      shift, and go to state 50
-    DOUBLE_NUMBER   shift, and go to state 51
-    TRUE            shift, and go to state 56
-    FALSE           shift, and go to state 57
+    LBRACK  shift, and go to state 18
 
-    expr       go to state 58
-    condition  go to state 59
-    c_term     go to state 60
-    comp       go to state 61
-    comp_term  go to state 62
+    LBRACK    [reduce using rule 7 (dimen_op)]
+    $default  reduce using rule 7 (dimen_op)
+
+    dimen_op  go to state 57
 
 
 state 45
 
-   16 stmt_list: stmt_list . SEMI_COLON stmt
-   33 while_stmt: DO stmt_list . WHILE LPAREN condition RPAREN
+   17 function: FUNCTION ID LPAREN args_op . RPAREN COLON type LBRACE stmt_list RBRACE
 
-    WHILE       shift, and go to state 63
-    SEMI_COLON  shift, and go to state 46
+    RPAREN  shift, and go to state 58
 
 
 state 46
 
-   16 stmt_list: stmt_list SEMI_COLON . stmt
+   18 function: FUNCTION MAIN LPAREN args_op . RPAREN COLON type LBRACE stmt_list RBRACE
 
-    ID     shift, and go to state 29
-    WHILE  shift, and go to state 30
-    DO     shift, and go to state 31
-
-    WHILE     [reduce using rule 19 (stmt)]
-    $default  reduce using rule 19 (stmt)
-
-    stmt         go to state 64
-    assign_stmt  go to state 34
-    while_stmt   go to state 35
+    RPAREN  shift, and go to state 59
 
 
 state 47
 
-    6 procedure: PROCEDURE ID LPAREN args RPAREN LBRACE stmt_list RBRACE .
+   44 expr: ID .
 
-    $default  reduce using rule 6 (procedure)
+    $default  reduce using rule 44 (expr)
 
 
 state 48
 
-    7 function: FUNCTION ID LPAREN args RPAREN COLON type LBRACE . stmt_list RBRACE
+   47 expr: STRING_LITERAL .
 
-    ID     shift, and go to state 29
-    WHILE  shift, and go to state 30
-    DO     shift, and go to state 31
-
-    $default  reduce using rule 19 (stmt)
-
-    stmt_list    go to state 65
-    stmt         go to state 33
-    assign_stmt  go to state 34
-    while_stmt   go to state 35
+    $default  reduce using rule 47 (expr)
 
 
 state 49
 
-   29 expr: STRING_LITERAL .
+   45 expr: INT_NUMBER .
 
-    $default  reduce using rule 29 (expr)
+    $default  reduce using rule 45 (expr)
 
 
 state 50
 
-   27 expr: INT_NUMBER .
+   46 expr: DOUBLE_NUMBER .
 
-    $default  reduce using rule 27 (expr)
+    $default  reduce using rule 46 (expr)
 
 
 state 51
 
-   28 expr: DOUBLE_NUMBER .
+   48 expr: TRUE .
 
-    $default  reduce using rule 28 (expr)
+    $default  reduce using rule 48 (expr)
 
 
 state 52
 
-   30 expr: TRUE .
+   49 expr: FALSE .
 
-    $default  reduce using rule 30 (expr)
+    $default  reduce using rule 49 (expr)
 
 
 state 53
 
-   31 expr: FALSE .
+    9 ids: ID assign_op expr .
+   50 expr: expr . PLUS expr
+   51     | expr . MINUS expr
+   52     | expr . MULT expr
+   53     | expr . DIVIDE expr
+   54     | expr . MODULE expr
 
-    $default  reduce using rule 31 (expr)
+    PLUS    shift, and go to state 60
+    MINUS   shift, and go to state 61
+    MULT    shift, and go to state 62
+    DIVIDE  shift, and go to state 63
+    MODULE  shift, and go to state 64
+
+    $default  reduce using rule 9 (ids)
 
 
 state 54
 
-   20 assign_stmt: ID assign_op expr .
+    8 ids: ids COMMA ID .
+   11    | ids COMMA ID . assign_op expr
 
-    $default  reduce using rule 20 (assign_stmt)
+    ADD_ASSIGN     shift, and go to state 32
+    SUB_ASSIGN     shift, and go to state 33
+    MULT_ASSIGN    shift, and go to state 34
+    DIVIDE_ASSIGN  shift, and go to state 35
+    MODULE_ASSIGN  shift, and go to state 36
+    ASSIGN         shift, and go to state 37
+
+    $default  reduce using rule 8 (ids)
+
+    assign_op  go to state 65
 
 
 state 55
 
-   36 c_term: ID .
+   16 procedure: PROCEDURE ID LPAREN args_op RPAREN . LBRACE stmt_list RBRACE
 
-    $default  reduce using rule 36 (c_term)
+    LBRACE  shift, and go to state 66
 
 
 state 56
 
-   30 expr: TRUE .
-   37 c_term: TRUE .
+   21 args: args COMMA . arg
 
-    RPAREN    reduce using rule 37 (c_term)
-    AND       reduce using rule 37 (c_term)
-    OR        reduce using rule 37 (c_term)
-    NOT       reduce using rule 37 (c_term)
-    $default  reduce using rule 30 (expr)
+    INT     shift, and go to state 1
+    FLOAT   shift, and go to state 2
+    DOUBLE  shift, and go to state 3
+    STRING  shift, and go to state 4
+    BOOL    shift, and go to state 5
+
+    arg   go to state 67
+    type  go to state 44
 
 
 state 57
 
-   31 expr: FALSE .
-   38 c_term: FALSE .
+    6 dimen_op: dimen_op . LBRACK RBRACK
+   23 arg: type dimen_op . ID
 
-    RPAREN    reduce using rule 38 (c_term)
-    AND       reduce using rule 38 (c_term)
-    OR        reduce using rule 38 (c_term)
-    NOT       reduce using rule 38 (c_term)
-    $default  reduce using rule 31 (expr)
+    ID      shift, and go to state 68
+    LBRACK  shift, and go to state 27
 
 
 state 58
 
-   41 comp_term: expr .
+   17 function: FUNCTION ID LPAREN args_op RPAREN . COLON type LBRACE stmt_list RBRACE
 
-    $default  reduce using rule 41 (comp_term)
+    COLON  shift, and go to state 69
 
 
 state 59
 
-   32 while_stmt: WHILE LPAREN condition . RPAREN LBRACE stmt_list RBRACE
-   34 condition: condition . logic_op c_term
+   18 function: FUNCTION MAIN LPAREN args_op RPAREN . COLON type LBRACE stmt_list RBRACE
 
-    RPAREN  shift, and go to state 66
-    AND     shift, and go to state 67
-    OR      shift, and go to state 68
-    NOT     shift, and go to state 69
-
-    logic_op  go to state 70
+    COLON  shift, and go to state 70
 
 
 state 60
 
-   35 condition: c_term .
+   50 expr: expr PLUS . expr
 
-    $default  reduce using rule 35 (condition)
+    ID              shift, and go to state 47
+    STRING_LITERAL  shift, and go to state 48
+    INT_NUMBER      shift, and go to state 49
+    DOUBLE_NUMBER   shift, and go to state 50
+    TRUE            shift, and go to state 51
+    FALSE           shift, and go to state 52
+
+    expr  go to state 71
 
 
 state 61
 
-   39 c_term: comp .
+   51 expr: expr MINUS . expr
 
-    $default  reduce using rule 39 (c_term)
+    ID              shift, and go to state 47
+    STRING_LITERAL  shift, and go to state 48
+    INT_NUMBER      shift, and go to state 49
+    DOUBLE_NUMBER   shift, and go to state 50
+    TRUE            shift, and go to state 51
+    FALSE           shift, and go to state 52
+
+    expr  go to state 72
 
 
 state 62
 
-   40 comp: comp_term . comp_op comp_term
+   52 expr: expr MULT . expr
 
-    EQ   shift, and go to state 71
-    NEQ  shift, and go to state 72
-    LT   shift, and go to state 73
-    LE   shift, and go to state 74
-    GT   shift, and go to state 75
-    GE   shift, and go to state 76
+    ID              shift, and go to state 47
+    STRING_LITERAL  shift, and go to state 48
+    INT_NUMBER      shift, and go to state 49
+    DOUBLE_NUMBER   shift, and go to state 50
+    TRUE            shift, and go to state 51
+    FALSE           shift, and go to state 52
 
-    comp_op  go to state 77
+    expr  go to state 73
 
 
 state 63
 
-   33 while_stmt: DO stmt_list WHILE . LPAREN condition RPAREN
+   53 expr: expr DIVIDE . expr
 
-    LPAREN  shift, and go to state 78
+    ID              shift, and go to state 47
+    STRING_LITERAL  shift, and go to state 48
+    INT_NUMBER      shift, and go to state 49
+    DOUBLE_NUMBER   shift, and go to state 50
+    TRUE            shift, and go to state 51
+    FALSE           shift, and go to state 52
+
+    expr  go to state 74
 
 
 state 64
 
-   16 stmt_list: stmt_list SEMI_COLON stmt .
+   54 expr: expr MODULE . expr
 
-    $default  reduce using rule 16 (stmt_list)
+    ID              shift, and go to state 47
+    STRING_LITERAL  shift, and go to state 48
+    INT_NUMBER      shift, and go to state 49
+    DOUBLE_NUMBER   shift, and go to state 50
+    TRUE            shift, and go to state 51
+    FALSE           shift, and go to state 52
+
+    expr  go to state 75
 
 
 state 65
 
-    7 function: FUNCTION ID LPAREN args RPAREN COLON type LBRACE stmt_list . RBRACE
-   16 stmt_list: stmt_list . SEMI_COLON stmt
+   11 ids: ids COMMA ID assign_op . expr
 
-    SEMI_COLON  shift, and go to state 46
-    RBRACE      shift, and go to state 79
+    ID              shift, and go to state 47
+    STRING_LITERAL  shift, and go to state 48
+    INT_NUMBER      shift, and go to state 49
+    DOUBLE_NUMBER   shift, and go to state 50
+    TRUE            shift, and go to state 51
+    FALSE           shift, and go to state 52
+
+    expr  go to state 76
 
 
 state 66
 
-   32 while_stmt: WHILE LPAREN condition RPAREN . LBRACE stmt_list RBRACE
+   16 procedure: PROCEDURE ID LPAREN args_op RPAREN LBRACE . stmt_list RBRACE
 
-    LBRACE  shift, and go to state 80
+    ID         shift, and go to state 77
+    INT        shift, and go to state 1
+    FLOAT      shift, and go to state 2
+    DOUBLE     shift, and go to state 3
+    STRING     shift, and go to state 4
+    BOOL       shift, and go to state 5
+    WHILE      shift, and go to state 78
+    DO         shift, and go to state 79
+    IF         shift, and go to state 80
+    FOR        shift, and go to state 81
+    INCREMENT  shift, and go to state 82
+    DECREMENT  shift, and go to state 83
+
+    ID         [reduce using rule 3 (decls)]
+    INT        [reduce using rule 3 (decls)]
+    FLOAT      [reduce using rule 3 (decls)]
+    DOUBLE     [reduce using rule 3 (decls)]
+    STRING     [reduce using rule 3 (decls)]
+    BOOL       [reduce using rule 3 (decls)]
+    WHILE      [reduce using rule 3 (decls)]
+    DO         [reduce using rule 3 (decls)]
+    IF         [reduce using rule 3 (decls)]
+    FOR        [reduce using rule 3 (decls)]
+    INCREMENT  [reduce using rule 3 (decls)]
+    DECREMENT  [reduce using rule 3 (decls)]
+    $default   reduce using rule 3 (decls)
+
+    decls       go to state 84
+    decl        go to state 8
+    type        go to state 9
+    stmt_list   go to state 85
+    stmt        go to state 86
+    while_stmt  go to state 87
+    if_stmt     go to state 88
+    for_stmt    go to state 89
+    inc_dec     go to state 90
 
 
 state 67
 
-   48 logic_op: AND .
+   21 args: args COMMA arg .
 
-    $default  reduce using rule 48 (logic_op)
+    $default  reduce using rule 21 (args)
 
 
 state 68
 
-   49 logic_op: OR .
+   23 arg: type dimen_op ID .
 
-    $default  reduce using rule 49 (logic_op)
+    $default  reduce using rule 23 (arg)
 
 
 state 69
 
-   50 logic_op: NOT .
+   17 function: FUNCTION ID LPAREN args_op RPAREN COLON . type LBRACE stmt_list RBRACE
 
-    $default  reduce using rule 50 (logic_op)
+    INT     shift, and go to state 1
+    FLOAT   shift, and go to state 2
+    DOUBLE  shift, and go to state 3
+    STRING  shift, and go to state 4
+    BOOL    shift, and go to state 5
+
+    type  go to state 91
 
 
 state 70
 
-   34 condition: condition logic_op . c_term
+   18 function: FUNCTION MAIN LPAREN args_op RPAREN COLON . type LBRACE stmt_list RBRACE
 
-    ID              shift, and go to state 55
-    STRING_LITERAL  shift, and go to state 49
-    INT_NUMBER      shift, and go to state 50
-    DOUBLE_NUMBER   shift, and go to state 51
-    TRUE            shift, and go to state 56
-    FALSE           shift, and go to state 57
+    INT     shift, and go to state 1
+    FLOAT   shift, and go to state 2
+    DOUBLE  shift, and go to state 3
+    STRING  shift, and go to state 4
+    BOOL    shift, and go to state 5
 
-    expr       go to state 58
-    c_term     go to state 81
-    comp       go to state 61
-    comp_term  go to state 62
+    type  go to state 92
 
 
 state 71
 
-   42 comp_op: EQ .
+   50 expr: expr . PLUS expr
+   50     | expr PLUS expr .
+   51     | expr . MINUS expr
+   52     | expr . MULT expr
+   53     | expr . DIVIDE expr
+   54     | expr . MODULE expr
 
-    $default  reduce using rule 42 (comp_op)
+    MULT    shift, and go to state 62
+    DIVIDE  shift, and go to state 63
+    MODULE  shift, and go to state 64
+
+    $default  reduce using rule 50 (expr)
 
 
 state 72
 
-   43 comp_op: NEQ .
+   50 expr: expr . PLUS expr
+   51     | expr . MINUS expr
+   51     | expr MINUS expr .
+   52     | expr . MULT expr
+   53     | expr . DIVIDE expr
+   54     | expr . MODULE expr
 
-    $default  reduce using rule 43 (comp_op)
+    MULT    shift, and go to state 62
+    DIVIDE  shift, and go to state 63
+    MODULE  shift, and go to state 64
+
+    $default  reduce using rule 51 (expr)
 
 
 state 73
 
-   47 comp_op: LT .
+   50 expr: expr . PLUS expr
+   51     | expr . MINUS expr
+   52     | expr . MULT expr
+   52     | expr MULT expr .
+   53     | expr . DIVIDE expr
+   54     | expr . MODULE expr
 
-    $default  reduce using rule 47 (comp_op)
+    $default  reduce using rule 52 (expr)
 
 
 state 74
 
-   45 comp_op: LE .
+   50 expr: expr . PLUS expr
+   51     | expr . MINUS expr
+   52     | expr . MULT expr
+   53     | expr . DIVIDE expr
+   53     | expr DIVIDE expr .
+   54     | expr . MODULE expr
 
-    $default  reduce using rule 45 (comp_op)
+    $default  reduce using rule 53 (expr)
 
 
 state 75
 
-   46 comp_op: GT .
+   50 expr: expr . PLUS expr
+   51     | expr . MINUS expr
+   52     | expr . MULT expr
+   53     | expr . DIVIDE expr
+   54     | expr . MODULE expr
+   54     | expr MODULE expr .
 
-    $default  reduce using rule 46 (comp_op)
+    $default  reduce using rule 54 (expr)
 
 
 state 76
 
-   44 comp_op: GE .
+   11 ids: ids COMMA ID assign_op expr .
+   50 expr: expr . PLUS expr
+   51     | expr . MINUS expr
+   52     | expr . MULT expr
+   53     | expr . DIVIDE expr
+   54     | expr . MODULE expr
 
-    $default  reduce using rule 44 (comp_op)
+    PLUS    shift, and go to state 60
+    MINUS   shift, and go to state 61
+    MULT    shift, and go to state 62
+    DIVIDE  shift, and go to state 63
+    MODULE  shift, and go to state 64
+
+    $default  reduce using rule 11 (ids)
 
 
 state 77
 
-   40 comp: comp_term comp_op . comp_term
+   60 inc_dec: ID . INCREMENT
+   61        | ID . DECREMENT
 
-    STRING_LITERAL  shift, and go to state 49
-    INT_NUMBER      shift, and go to state 50
-    DOUBLE_NUMBER   shift, and go to state 51
-    TRUE            shift, and go to state 52
-    FALSE           shift, and go to state 53
-
-    expr       go to state 58
-    comp_term  go to state 82
+    INCREMENT  shift, and go to state 93
+    DECREMENT  shift, and go to state 94
 
 
 state 78
 
-   33 while_stmt: DO stmt_list WHILE LPAREN . condition RPAREN
+   55 while_stmt: WHILE . LPAREN condition RPAREN LBRACE stmt_list RBRACE
 
-    ID              shift, and go to state 55
-    STRING_LITERAL  shift, and go to state 49
-    INT_NUMBER      shift, and go to state 50
-    DOUBLE_NUMBER   shift, and go to state 51
-    TRUE            shift, and go to state 56
-    FALSE           shift, and go to state 57
-
-    expr       go to state 58
-    condition  go to state 83
-    c_term     go to state 60
-    comp       go to state 61
-    comp_term  go to state 62
+    LPAREN  shift, and go to state 95
 
 
 state 79
 
-    7 function: FUNCTION ID LPAREN args RPAREN COLON type LBRACE stmt_list RBRACE .
+   56 while_stmt: DO . LBRACE stmt_list RBRACE WHILE LPAREN condition RPAREN SEMI_COLON
 
-    $default  reduce using rule 7 (function)
+    LBRACE  shift, and go to state 96
 
 
 state 80
 
-   32 while_stmt: WHILE LPAREN condition RPAREN LBRACE . stmt_list RBRACE
+   57 if_stmt: IF . LPAREN condition RPAREN LBRACE stmt_list RBRACE
 
-    ID     shift, and go to state 29
-    WHILE  shift, and go to state 30
-    DO     shift, and go to state 31
-
-    $default  reduce using rule 19 (stmt)
-
-    stmt_list    go to state 84
-    stmt         go to state 33
-    assign_stmt  go to state 34
-    while_stmt   go to state 35
+    LPAREN  shift, and go to state 97
 
 
 state 81
 
-   34 condition: condition logic_op c_term .
+   58 for_stmt: FOR . LPAREN for_args RPAREN LBRACE stmt_list RBRACE
 
-    $default  reduce using rule 34 (condition)
+    LPAREN  shift, and go to state 98
 
 
 state 82
 
-   40 comp: comp_term comp_op comp_term .
+   62 inc_dec: INCREMENT . ID
 
-    $default  reduce using rule 40 (comp)
+    ID  shift, and go to state 99
 
 
 state 83
 
-   33 while_stmt: DO stmt_list WHILE LPAREN condition . RPAREN
-   34 condition: condition . logic_op c_term
+   63 inc_dec: DECREMENT . ID
 
-    RPAREN  shift, and go to state 85
-    AND     shift, and go to state 67
-    OR      shift, and go to state 68
-    NOT     shift, and go to state 69
-
-    logic_op  go to state 70
+    ID  shift, and go to state 100
 
 
 state 84
 
-   16 stmt_list: stmt_list . SEMI_COLON stmt
-   32 while_stmt: WHILE LPAREN condition RPAREN LBRACE stmt_list . RBRACE
+   33 stmt: decls .
 
-    SEMI_COLON  shift, and go to state 46
-    RBRACE      shift, and go to state 86
+    $default  reduce using rule 33 (stmt)
 
 
 state 85
 
-   33 while_stmt: DO stmt_list WHILE LPAREN condition RPAREN .
+   16 procedure: PROCEDURE ID LPAREN args_op RPAREN LBRACE stmt_list . RBRACE
+   30 stmt_list: stmt_list . stmt
 
-    $default  reduce using rule 33 (while_stmt)
+    ID         shift, and go to state 77
+    INT        shift, and go to state 1
+    FLOAT      shift, and go to state 2
+    DOUBLE     shift, and go to state 3
+    STRING     shift, and go to state 4
+    BOOL       shift, and go to state 5
+    WHILE      shift, and go to state 78
+    DO         shift, and go to state 79
+    IF         shift, and go to state 80
+    FOR        shift, and go to state 81
+    RBRACE     shift, and go to state 101
+    INCREMENT  shift, and go to state 82
+    DECREMENT  shift, and go to state 83
+
+    ID         [reduce using rule 3 (decls)]
+    INT        [reduce using rule 3 (decls)]
+    FLOAT      [reduce using rule 3 (decls)]
+    DOUBLE     [reduce using rule 3 (decls)]
+    STRING     [reduce using rule 3 (decls)]
+    BOOL       [reduce using rule 3 (decls)]
+    WHILE      [reduce using rule 3 (decls)]
+    DO         [reduce using rule 3 (decls)]
+    IF         [reduce using rule 3 (decls)]
+    FOR        [reduce using rule 3 (decls)]
+    RBRACE     [reduce using rule 3 (decls)]
+    INCREMENT  [reduce using rule 3 (decls)]
+    DECREMENT  [reduce using rule 3 (decls)]
+
+    decls       go to state 84
+    decl        go to state 8
+    type        go to state 9
+    stmt        go to state 102
+    while_stmt  go to state 87
+    if_stmt     go to state 88
+    for_stmt    go to state 89
+    inc_dec     go to state 90
 
 
 state 86
 
-   32 while_stmt: WHILE LPAREN condition RPAREN LBRACE stmt_list RBRACE .
+   29 stmt_list: stmt .
 
-    $default  reduce using rule 32 (while_stmt)
+    $default  reduce using rule 29 (stmt_list)
+
+
+state 87
+
+   31 stmt: while_stmt .
+
+    $default  reduce using rule 31 (stmt)
+
+
+state 88
+
+   32 stmt: if_stmt .
+
+    $default  reduce using rule 32 (stmt)
+
+
+state 89
+
+   34 stmt: for_stmt .
+
+    $default  reduce using rule 34 (stmt)
+
+
+state 90
+
+   35 stmt: inc_dec . SEMI_COLON
+
+    SEMI_COLON  shift, and go to state 103
+
+
+state 91
+
+   17 function: FUNCTION ID LPAREN args_op RPAREN COLON type . LBRACE stmt_list RBRACE
+
+    LBRACE  shift, and go to state 104
+
+
+state 92
+
+   18 function: FUNCTION MAIN LPAREN args_op RPAREN COLON type . LBRACE stmt_list RBRACE
+
+    LBRACE  shift, and go to state 105
+
+
+state 93
+
+   60 inc_dec: ID INCREMENT .
+
+    $default  reduce using rule 60 (inc_dec)
+
+
+state 94
+
+   61 inc_dec: ID DECREMENT .
+
+    $default  reduce using rule 61 (inc_dec)
+
+
+state 95
+
+   55 while_stmt: WHILE LPAREN . condition RPAREN LBRACE stmt_list RBRACE
+
+    ID              shift, and go to state 106
+    STRING_LITERAL  shift, and go to state 48
+    INT_NUMBER      shift, and go to state 49
+    DOUBLE_NUMBER   shift, and go to state 50
+    TRUE            shift, and go to state 107
+    FALSE           shift, and go to state 108
+
+    expr       go to state 109
+    condition  go to state 110
+    c_term     go to state 111
+    comp       go to state 112
+    comp_term  go to state 113
+
+
+state 96
+
+   56 while_stmt: DO LBRACE . stmt_list RBRACE WHILE LPAREN condition RPAREN SEMI_COLON
+
+    ID         shift, and go to state 77
+    INT        shift, and go to state 1
+    FLOAT      shift, and go to state 2
+    DOUBLE     shift, and go to state 3
+    STRING     shift, and go to state 4
+    BOOL       shift, and go to state 5
+    WHILE      shift, and go to state 78
+    DO         shift, and go to state 79
+    IF         shift, and go to state 80
+    FOR        shift, and go to state 81
+    INCREMENT  shift, and go to state 82
+    DECREMENT  shift, and go to state 83
+
+    ID         [reduce using rule 3 (decls)]
+    INT        [reduce using rule 3 (decls)]
+    FLOAT      [reduce using rule 3 (decls)]
+    DOUBLE     [reduce using rule 3 (decls)]
+    STRING     [reduce using rule 3 (decls)]
+    BOOL       [reduce using rule 3 (decls)]
+    WHILE      [reduce using rule 3 (decls)]
+    DO         [reduce using rule 3 (decls)]
+    IF         [reduce using rule 3 (decls)]
+    FOR        [reduce using rule 3 (decls)]
+    INCREMENT  [reduce using rule 3 (decls)]
+    DECREMENT  [reduce using rule 3 (decls)]
+    $default   reduce using rule 3 (decls)
+
+    decls       go to state 84
+    decl        go to state 8
+    type        go to state 9
+    stmt_list   go to state 114
+    stmt        go to state 86
+    while_stmt  go to state 87
+    if_stmt     go to state 88
+    for_stmt    go to state 89
+    inc_dec     go to state 90
+
+
+state 97
+
+   57 if_stmt: IF LPAREN . condition RPAREN LBRACE stmt_list RBRACE
+
+    ID              shift, and go to state 106
+    STRING_LITERAL  shift, and go to state 48
+    INT_NUMBER      shift, and go to state 49
+    DOUBLE_NUMBER   shift, and go to state 50
+    TRUE            shift, and go to state 107
+    FALSE           shift, and go to state 108
+
+    expr       go to state 109
+    condition  go to state 115
+    c_term     go to state 111
+    comp       go to state 112
+    comp_term  go to state 113
+
+
+state 98
+
+   58 for_stmt: FOR LPAREN . for_args RPAREN LBRACE stmt_list RBRACE
+
+    ID      shift, and go to state 116
+    INT     shift, and go to state 1
+    FLOAT   shift, and go to state 2
+    DOUBLE  shift, and go to state 3
+    STRING  shift, and go to state 4
+    BOOL    shift, and go to state 5
+
+    type         go to state 117
+    assign_stmt  go to state 118
+    for_args     go to state 119
+
+
+state 99
+
+   62 inc_dec: INCREMENT ID .
+
+    $default  reduce using rule 62 (inc_dec)
+
+
+state 100
+
+   63 inc_dec: DECREMENT ID .
+
+    $default  reduce using rule 63 (inc_dec)
+
+
+state 101
+
+   16 procedure: PROCEDURE ID LPAREN args_op RPAREN LBRACE stmt_list RBRACE .
+
+    $default  reduce using rule 16 (procedure)
+
+
+state 102
+
+   30 stmt_list: stmt_list stmt .
+
+    $default  reduce using rule 30 (stmt_list)
+
+
+state 103
+
+   35 stmt: inc_dec SEMI_COLON .
+
+    $default  reduce using rule 35 (stmt)
+
+
+state 104
+
+   17 function: FUNCTION ID LPAREN args_op RPAREN COLON type LBRACE . stmt_list RBRACE
+
+    ID         shift, and go to state 77
+    INT        shift, and go to state 1
+    FLOAT      shift, and go to state 2
+    DOUBLE     shift, and go to state 3
+    STRING     shift, and go to state 4
+    BOOL       shift, and go to state 5
+    WHILE      shift, and go to state 78
+    DO         shift, and go to state 79
+    IF         shift, and go to state 80
+    FOR        shift, and go to state 81
+    INCREMENT  shift, and go to state 82
+    DECREMENT  shift, and go to state 83
+
+    ID         [reduce using rule 3 (decls)]
+    INT        [reduce using rule 3 (decls)]
+    FLOAT      [reduce using rule 3 (decls)]
+    DOUBLE     [reduce using rule 3 (decls)]
+    STRING     [reduce using rule 3 (decls)]
+    BOOL       [reduce using rule 3 (decls)]
+    WHILE      [reduce using rule 3 (decls)]
+    DO         [reduce using rule 3 (decls)]
+    IF         [reduce using rule 3 (decls)]
+    FOR        [reduce using rule 3 (decls)]
+    INCREMENT  [reduce using rule 3 (decls)]
+    DECREMENT  [reduce using rule 3 (decls)]
+    $default   reduce using rule 3 (decls)
+
+    decls       go to state 84
+    decl        go to state 8
+    type        go to state 9
+    stmt_list   go to state 120
+    stmt        go to state 86
+    while_stmt  go to state 87
+    if_stmt     go to state 88
+    for_stmt    go to state 89
+    inc_dec     go to state 90
+
+
+state 105
+
+   18 function: FUNCTION MAIN LPAREN args_op RPAREN COLON type LBRACE . stmt_list RBRACE
+
+    ID         shift, and go to state 77
+    INT        shift, and go to state 1
+    FLOAT      shift, and go to state 2
+    DOUBLE     shift, and go to state 3
+    STRING     shift, and go to state 4
+    BOOL       shift, and go to state 5
+    WHILE      shift, and go to state 78
+    DO         shift, and go to state 79
+    IF         shift, and go to state 80
+    FOR        shift, and go to state 81
+    INCREMENT  shift, and go to state 82
+    DECREMENT  shift, and go to state 83
+
+    ID         [reduce using rule 3 (decls)]
+    INT        [reduce using rule 3 (decls)]
+    FLOAT      [reduce using rule 3 (decls)]
+    DOUBLE     [reduce using rule 3 (decls)]
+    STRING     [reduce using rule 3 (decls)]
+    BOOL       [reduce using rule 3 (decls)]
+    WHILE      [reduce using rule 3 (decls)]
+    DO         [reduce using rule 3 (decls)]
+    IF         [reduce using rule 3 (decls)]
+    FOR        [reduce using rule 3 (decls)]
+    INCREMENT  [reduce using rule 3 (decls)]
+    DECREMENT  [reduce using rule 3 (decls)]
+    $default   reduce using rule 3 (decls)
+
+    decls       go to state 84
+    decl        go to state 8
+    type        go to state 9
+    stmt_list   go to state 121
+    stmt        go to state 86
+    while_stmt  go to state 87
+    if_stmt     go to state 88
+    for_stmt    go to state 89
+    inc_dec     go to state 90
+
+
+state 106
+
+   44 expr: ID .
+   66 c_term: ID .
+
+    RPAREN    reduce using rule 66 (c_term)
+    AND       reduce using rule 66 (c_term)
+    OR        reduce using rule 66 (c_term)
+    NOT       reduce using rule 66 (c_term)
+    $default  reduce using rule 44 (expr)
+
+
+state 107
+
+   48 expr: TRUE .
+   67 c_term: TRUE .
+
+    RPAREN    reduce using rule 67 (c_term)
+    AND       reduce using rule 67 (c_term)
+    OR        reduce using rule 67 (c_term)
+    NOT       reduce using rule 67 (c_term)
+    $default  reduce using rule 48 (expr)
+
+
+state 108
+
+   49 expr: FALSE .
+   68 c_term: FALSE .
+
+    RPAREN    reduce using rule 68 (c_term)
+    AND       reduce using rule 68 (c_term)
+    OR        reduce using rule 68 (c_term)
+    NOT       reduce using rule 68 (c_term)
+    $default  reduce using rule 49 (expr)
+
+
+state 109
+
+   50 expr: expr . PLUS expr
+   51     | expr . MINUS expr
+   52     | expr . MULT expr
+   53     | expr . DIVIDE expr
+   54     | expr . MODULE expr
+   71 comp_term: expr .
+
+    PLUS    shift, and go to state 60
+    MINUS   shift, and go to state 61
+    MULT    shift, and go to state 62
+    DIVIDE  shift, and go to state 63
+    MODULE  shift, and go to state 64
+
+    $default  reduce using rule 71 (comp_term)
+
+
+state 110
+
+   55 while_stmt: WHILE LPAREN condition . RPAREN LBRACE stmt_list RBRACE
+   64 condition: condition . logic_op c_term
+
+    RPAREN  shift, and go to state 122
+    AND     shift, and go to state 123
+    OR      shift, and go to state 124
+    NOT     shift, and go to state 125
+
+    logic_op  go to state 126
+
+
+state 111
+
+   65 condition: c_term .
+
+    $default  reduce using rule 65 (condition)
+
+
+state 112
+
+   69 c_term: comp .
+
+    $default  reduce using rule 69 (c_term)
+
+
+state 113
+
+   70 comp: comp_term . comp_op comp_term
+
+    EQ   shift, and go to state 127
+    NEQ  shift, and go to state 128
+    LT   shift, and go to state 129
+    LE   shift, and go to state 130
+    GT   shift, and go to state 131
+    GE   shift, and go to state 132
+
+    comp_op  go to state 133
+
+
+state 114
+
+   30 stmt_list: stmt_list . stmt
+   56 while_stmt: DO LBRACE stmt_list . RBRACE WHILE LPAREN condition RPAREN SEMI_COLON
+
+    ID         shift, and go to state 77
+    INT        shift, and go to state 1
+    FLOAT      shift, and go to state 2
+    DOUBLE     shift, and go to state 3
+    STRING     shift, and go to state 4
+    BOOL       shift, and go to state 5
+    WHILE      shift, and go to state 78
+    DO         shift, and go to state 79
+    IF         shift, and go to state 80
+    FOR        shift, and go to state 81
+    RBRACE     shift, and go to state 134
+    INCREMENT  shift, and go to state 82
+    DECREMENT  shift, and go to state 83
+
+    ID         [reduce using rule 3 (decls)]
+    INT        [reduce using rule 3 (decls)]
+    FLOAT      [reduce using rule 3 (decls)]
+    DOUBLE     [reduce using rule 3 (decls)]
+    STRING     [reduce using rule 3 (decls)]
+    BOOL       [reduce using rule 3 (decls)]
+    WHILE      [reduce using rule 3 (decls)]
+    DO         [reduce using rule 3 (decls)]
+    IF         [reduce using rule 3 (decls)]
+    FOR        [reduce using rule 3 (decls)]
+    RBRACE     [reduce using rule 3 (decls)]
+    INCREMENT  [reduce using rule 3 (decls)]
+    DECREMENT  [reduce using rule 3 (decls)]
+
+    decls       go to state 84
+    decl        go to state 8
+    type        go to state 9
+    stmt        go to state 102
+    while_stmt  go to state 87
+    if_stmt     go to state 88
+    for_stmt    go to state 89
+    inc_dec     go to state 90
+
+
+state 115
+
+   57 if_stmt: IF LPAREN condition . RPAREN LBRACE stmt_list RBRACE
+   64 condition: condition . logic_op c_term
+
+    RPAREN  shift, and go to state 135
+    AND     shift, and go to state 123
+    OR      shift, and go to state 124
+    NOT     shift, and go to state 125
+
+    logic_op  go to state 126
+
+
+state 116
+
+   36 assign_stmt: ID . assign_op expr
+
+    ADD_ASSIGN     shift, and go to state 32
+    SUB_ASSIGN     shift, and go to state 33
+    MULT_ASSIGN    shift, and go to state 34
+    DIVIDE_ASSIGN  shift, and go to state 35
+    MODULE_ASSIGN  shift, and go to state 36
+    ASSIGN         shift, and go to state 37
+
+    assign_op  go to state 136
+
+
+state 117
+
+   37 assign_stmt: type . ID assign_op expr
+
+    ID  shift, and go to state 137
+
+
+state 118
+
+   59 for_args: assign_stmt . SEMI_COLON ID comp_op ID SEMI_COLON inc_dec
+
+    SEMI_COLON  shift, and go to state 138
+
+
+state 119
+
+   58 for_stmt: FOR LPAREN for_args . RPAREN LBRACE stmt_list RBRACE
+
+    RPAREN  shift, and go to state 139
+
+
+state 120
+
+   17 function: FUNCTION ID LPAREN args_op RPAREN COLON type LBRACE stmt_list . RBRACE
+   30 stmt_list: stmt_list . stmt
+
+    ID         shift, and go to state 77
+    INT        shift, and go to state 1
+    FLOAT      shift, and go to state 2
+    DOUBLE     shift, and go to state 3
+    STRING     shift, and go to state 4
+    BOOL       shift, and go to state 5
+    WHILE      shift, and go to state 78
+    DO         shift, and go to state 79
+    IF         shift, and go to state 80
+    FOR        shift, and go to state 81
+    RBRACE     shift, and go to state 140
+    INCREMENT  shift, and go to state 82
+    DECREMENT  shift, and go to state 83
+
+    ID         [reduce using rule 3 (decls)]
+    INT        [reduce using rule 3 (decls)]
+    FLOAT      [reduce using rule 3 (decls)]
+    DOUBLE     [reduce using rule 3 (decls)]
+    STRING     [reduce using rule 3 (decls)]
+    BOOL       [reduce using rule 3 (decls)]
+    WHILE      [reduce using rule 3 (decls)]
+    DO         [reduce using rule 3 (decls)]
+    IF         [reduce using rule 3 (decls)]
+    FOR        [reduce using rule 3 (decls)]
+    RBRACE     [reduce using rule 3 (decls)]
+    INCREMENT  [reduce using rule 3 (decls)]
+    DECREMENT  [reduce using rule 3 (decls)]
+
+    decls       go to state 84
+    decl        go to state 8
+    type        go to state 9
+    stmt        go to state 102
+    while_stmt  go to state 87
+    if_stmt     go to state 88
+    for_stmt    go to state 89
+    inc_dec     go to state 90
+
+
+state 121
+
+   18 function: FUNCTION MAIN LPAREN args_op RPAREN COLON type LBRACE stmt_list . RBRACE
+   30 stmt_list: stmt_list . stmt
+
+    ID         shift, and go to state 77
+    INT        shift, and go to state 1
+    FLOAT      shift, and go to state 2
+    DOUBLE     shift, and go to state 3
+    STRING     shift, and go to state 4
+    BOOL       shift, and go to state 5
+    WHILE      shift, and go to state 78
+    DO         shift, and go to state 79
+    IF         shift, and go to state 80
+    FOR        shift, and go to state 81
+    RBRACE     shift, and go to state 141
+    INCREMENT  shift, and go to state 82
+    DECREMENT  shift, and go to state 83
+
+    ID         [reduce using rule 3 (decls)]
+    INT        [reduce using rule 3 (decls)]
+    FLOAT      [reduce using rule 3 (decls)]
+    DOUBLE     [reduce using rule 3 (decls)]
+    STRING     [reduce using rule 3 (decls)]
+    BOOL       [reduce using rule 3 (decls)]
+    WHILE      [reduce using rule 3 (decls)]
+    DO         [reduce using rule 3 (decls)]
+    IF         [reduce using rule 3 (decls)]
+    FOR        [reduce using rule 3 (decls)]
+    RBRACE     [reduce using rule 3 (decls)]
+    INCREMENT  [reduce using rule 3 (decls)]
+    DECREMENT  [reduce using rule 3 (decls)]
+
+    decls       go to state 84
+    decl        go to state 8
+    type        go to state 9
+    stmt        go to state 102
+    while_stmt  go to state 87
+    if_stmt     go to state 88
+    for_stmt    go to state 89
+    inc_dec     go to state 90
+
+
+state 122
+
+   55 while_stmt: WHILE LPAREN condition RPAREN . LBRACE stmt_list RBRACE
+
+    LBRACE  shift, and go to state 142
+
+
+state 123
+
+   78 logic_op: AND .
+
+    $default  reduce using rule 78 (logic_op)
+
+
+state 124
+
+   79 logic_op: OR .
+
+    $default  reduce using rule 79 (logic_op)
+
+
+state 125
+
+   80 logic_op: NOT .
+
+    $default  reduce using rule 80 (logic_op)
+
+
+state 126
+
+   64 condition: condition logic_op . c_term
+
+    ID              shift, and go to state 106
+    STRING_LITERAL  shift, and go to state 48
+    INT_NUMBER      shift, and go to state 49
+    DOUBLE_NUMBER   shift, and go to state 50
+    TRUE            shift, and go to state 107
+    FALSE           shift, and go to state 108
+
+    expr       go to state 109
+    c_term     go to state 143
+    comp       go to state 112
+    comp_term  go to state 113
+
+
+state 127
+
+   72 comp_op: EQ .
+
+    $default  reduce using rule 72 (comp_op)
+
+
+state 128
+
+   73 comp_op: NEQ .
+
+    $default  reduce using rule 73 (comp_op)
+
+
+state 129
+
+   77 comp_op: LT .
+
+    $default  reduce using rule 77 (comp_op)
+
+
+state 130
+
+   75 comp_op: LE .
+
+    $default  reduce using rule 75 (comp_op)
+
+
+state 131
+
+   76 comp_op: GT .
+
+    $default  reduce using rule 76 (comp_op)
+
+
+state 132
+
+   74 comp_op: GE .
+
+    $default  reduce using rule 74 (comp_op)
+
+
+state 133
+
+   70 comp: comp_term comp_op . comp_term
+
+    ID              shift, and go to state 47
+    STRING_LITERAL  shift, and go to state 48
+    INT_NUMBER      shift, and go to state 49
+    DOUBLE_NUMBER   shift, and go to state 50
+    TRUE            shift, and go to state 51
+    FALSE           shift, and go to state 52
+
+    expr       go to state 109
+    comp_term  go to state 144
+
+
+state 134
+
+   56 while_stmt: DO LBRACE stmt_list RBRACE . WHILE LPAREN condition RPAREN SEMI_COLON
+
+    WHILE  shift, and go to state 145
+
+
+state 135
+
+   57 if_stmt: IF LPAREN condition RPAREN . LBRACE stmt_list RBRACE
+
+    LBRACE  shift, and go to state 146
+
+
+state 136
+
+   36 assign_stmt: ID assign_op . expr
+
+    ID              shift, and go to state 47
+    STRING_LITERAL  shift, and go to state 48
+    INT_NUMBER      shift, and go to state 49
+    DOUBLE_NUMBER   shift, and go to state 50
+    TRUE            shift, and go to state 51
+    FALSE           shift, and go to state 52
+
+    expr  go to state 147
+
+
+state 137
+
+   37 assign_stmt: type ID . assign_op expr
+
+    ADD_ASSIGN     shift, and go to state 32
+    SUB_ASSIGN     shift, and go to state 33
+    MULT_ASSIGN    shift, and go to state 34
+    DIVIDE_ASSIGN  shift, and go to state 35
+    MODULE_ASSIGN  shift, and go to state 36
+    ASSIGN         shift, and go to state 37
+
+    assign_op  go to state 148
+
+
+state 138
+
+   59 for_args: assign_stmt SEMI_COLON . ID comp_op ID SEMI_COLON inc_dec
+
+    ID  shift, and go to state 149
+
+
+state 139
+
+   58 for_stmt: FOR LPAREN for_args RPAREN . LBRACE stmt_list RBRACE
+
+    LBRACE  shift, and go to state 150
+
+
+state 140
+
+   17 function: FUNCTION ID LPAREN args_op RPAREN COLON type LBRACE stmt_list RBRACE .
+
+    $default  reduce using rule 17 (function)
+
+
+state 141
+
+   18 function: FUNCTION MAIN LPAREN args_op RPAREN COLON type LBRACE stmt_list RBRACE .
+
+    $default  reduce using rule 18 (function)
+
+
+state 142
+
+   55 while_stmt: WHILE LPAREN condition RPAREN LBRACE . stmt_list RBRACE
+
+    ID         shift, and go to state 77
+    INT        shift, and go to state 1
+    FLOAT      shift, and go to state 2
+    DOUBLE     shift, and go to state 3
+    STRING     shift, and go to state 4
+    BOOL       shift, and go to state 5
+    WHILE      shift, and go to state 78
+    DO         shift, and go to state 79
+    IF         shift, and go to state 80
+    FOR        shift, and go to state 81
+    INCREMENT  shift, and go to state 82
+    DECREMENT  shift, and go to state 83
+
+    ID         [reduce using rule 3 (decls)]
+    INT        [reduce using rule 3 (decls)]
+    FLOAT      [reduce using rule 3 (decls)]
+    DOUBLE     [reduce using rule 3 (decls)]
+    STRING     [reduce using rule 3 (decls)]
+    BOOL       [reduce using rule 3 (decls)]
+    WHILE      [reduce using rule 3 (decls)]
+    DO         [reduce using rule 3 (decls)]
+    IF         [reduce using rule 3 (decls)]
+    FOR        [reduce using rule 3 (decls)]
+    INCREMENT  [reduce using rule 3 (decls)]
+    DECREMENT  [reduce using rule 3 (decls)]
+    $default   reduce using rule 3 (decls)
+
+    decls       go to state 84
+    decl        go to state 8
+    type        go to state 9
+    stmt_list   go to state 151
+    stmt        go to state 86
+    while_stmt  go to state 87
+    if_stmt     go to state 88
+    for_stmt    go to state 89
+    inc_dec     go to state 90
+
+
+state 143
+
+   64 condition: condition logic_op c_term .
+
+    $default  reduce using rule 64 (condition)
+
+
+state 144
+
+   70 comp: comp_term comp_op comp_term .
+
+    $default  reduce using rule 70 (comp)
+
+
+state 145
+
+   56 while_stmt: DO LBRACE stmt_list RBRACE WHILE . LPAREN condition RPAREN SEMI_COLON
+
+    LPAREN  shift, and go to state 152
+
+
+state 146
+
+   57 if_stmt: IF LPAREN condition RPAREN LBRACE . stmt_list RBRACE
+
+    ID         shift, and go to state 77
+    INT        shift, and go to state 1
+    FLOAT      shift, and go to state 2
+    DOUBLE     shift, and go to state 3
+    STRING     shift, and go to state 4
+    BOOL       shift, and go to state 5
+    WHILE      shift, and go to state 78
+    DO         shift, and go to state 79
+    IF         shift, and go to state 80
+    FOR        shift, and go to state 81
+    INCREMENT  shift, and go to state 82
+    DECREMENT  shift, and go to state 83
+
+    ID         [reduce using rule 3 (decls)]
+    INT        [reduce using rule 3 (decls)]
+    FLOAT      [reduce using rule 3 (decls)]
+    DOUBLE     [reduce using rule 3 (decls)]
+    STRING     [reduce using rule 3 (decls)]
+    BOOL       [reduce using rule 3 (decls)]
+    WHILE      [reduce using rule 3 (decls)]
+    DO         [reduce using rule 3 (decls)]
+    IF         [reduce using rule 3 (decls)]
+    FOR        [reduce using rule 3 (decls)]
+    INCREMENT  [reduce using rule 3 (decls)]
+    DECREMENT  [reduce using rule 3 (decls)]
+    $default   reduce using rule 3 (decls)
+
+    decls       go to state 84
+    decl        go to state 8
+    type        go to state 9
+    stmt_list   go to state 153
+    stmt        go to state 86
+    while_stmt  go to state 87
+    if_stmt     go to state 88
+    for_stmt    go to state 89
+    inc_dec     go to state 90
+
+
+state 147
+
+   36 assign_stmt: ID assign_op expr .
+   50 expr: expr . PLUS expr
+   51     | expr . MINUS expr
+   52     | expr . MULT expr
+   53     | expr . DIVIDE expr
+   54     | expr . MODULE expr
+
+    PLUS    shift, and go to state 60
+    MINUS   shift, and go to state 61
+    MULT    shift, and go to state 62
+    DIVIDE  shift, and go to state 63
+    MODULE  shift, and go to state 64
+
+    $default  reduce using rule 36 (assign_stmt)
+
+
+state 148
+
+   37 assign_stmt: type ID assign_op . expr
+
+    ID              shift, and go to state 47
+    STRING_LITERAL  shift, and go to state 48
+    INT_NUMBER      shift, and go to state 49
+    DOUBLE_NUMBER   shift, and go to state 50
+    TRUE            shift, and go to state 51
+    FALSE           shift, and go to state 52
+
+    expr  go to state 154
+
+
+state 149
+
+   59 for_args: assign_stmt SEMI_COLON ID . comp_op ID SEMI_COLON inc_dec
+
+    EQ   shift, and go to state 127
+    NEQ  shift, and go to state 128
+    LT   shift, and go to state 129
+    LE   shift, and go to state 130
+    GT   shift, and go to state 131
+    GE   shift, and go to state 132
+
+    comp_op  go to state 155
+
+
+state 150
+
+   58 for_stmt: FOR LPAREN for_args RPAREN LBRACE . stmt_list RBRACE
+
+    ID         shift, and go to state 77
+    INT        shift, and go to state 1
+    FLOAT      shift, and go to state 2
+    DOUBLE     shift, and go to state 3
+    STRING     shift, and go to state 4
+    BOOL       shift, and go to state 5
+    WHILE      shift, and go to state 78
+    DO         shift, and go to state 79
+    IF         shift, and go to state 80
+    FOR        shift, and go to state 81
+    INCREMENT  shift, and go to state 82
+    DECREMENT  shift, and go to state 83
+
+    ID         [reduce using rule 3 (decls)]
+    INT        [reduce using rule 3 (decls)]
+    FLOAT      [reduce using rule 3 (decls)]
+    DOUBLE     [reduce using rule 3 (decls)]
+    STRING     [reduce using rule 3 (decls)]
+    BOOL       [reduce using rule 3 (decls)]
+    WHILE      [reduce using rule 3 (decls)]
+    DO         [reduce using rule 3 (decls)]
+    IF         [reduce using rule 3 (decls)]
+    FOR        [reduce using rule 3 (decls)]
+    INCREMENT  [reduce using rule 3 (decls)]
+    DECREMENT  [reduce using rule 3 (decls)]
+    $default   reduce using rule 3 (decls)
+
+    decls       go to state 84
+    decl        go to state 8
+    type        go to state 9
+    stmt_list   go to state 156
+    stmt        go to state 86
+    while_stmt  go to state 87
+    if_stmt     go to state 88
+    for_stmt    go to state 89
+    inc_dec     go to state 90
+
+
+state 151
+
+   30 stmt_list: stmt_list . stmt
+   55 while_stmt: WHILE LPAREN condition RPAREN LBRACE stmt_list . RBRACE
+
+    ID         shift, and go to state 77
+    INT        shift, and go to state 1
+    FLOAT      shift, and go to state 2
+    DOUBLE     shift, and go to state 3
+    STRING     shift, and go to state 4
+    BOOL       shift, and go to state 5
+    WHILE      shift, and go to state 78
+    DO         shift, and go to state 79
+    IF         shift, and go to state 80
+    FOR        shift, and go to state 81
+    RBRACE     shift, and go to state 157
+    INCREMENT  shift, and go to state 82
+    DECREMENT  shift, and go to state 83
+
+    ID         [reduce using rule 3 (decls)]
+    INT        [reduce using rule 3 (decls)]
+    FLOAT      [reduce using rule 3 (decls)]
+    DOUBLE     [reduce using rule 3 (decls)]
+    STRING     [reduce using rule 3 (decls)]
+    BOOL       [reduce using rule 3 (decls)]
+    WHILE      [reduce using rule 3 (decls)]
+    DO         [reduce using rule 3 (decls)]
+    IF         [reduce using rule 3 (decls)]
+    FOR        [reduce using rule 3 (decls)]
+    RBRACE     [reduce using rule 3 (decls)]
+    INCREMENT  [reduce using rule 3 (decls)]
+    DECREMENT  [reduce using rule 3 (decls)]
+
+    decls       go to state 84
+    decl        go to state 8
+    type        go to state 9
+    stmt        go to state 102
+    while_stmt  go to state 87
+    if_stmt     go to state 88
+    for_stmt    go to state 89
+    inc_dec     go to state 90
+
+
+state 152
+
+   56 while_stmt: DO LBRACE stmt_list RBRACE WHILE LPAREN . condition RPAREN SEMI_COLON
+
+    ID              shift, and go to state 106
+    STRING_LITERAL  shift, and go to state 48
+    INT_NUMBER      shift, and go to state 49
+    DOUBLE_NUMBER   shift, and go to state 50
+    TRUE            shift, and go to state 107
+    FALSE           shift, and go to state 108
+
+    expr       go to state 109
+    condition  go to state 158
+    c_term     go to state 111
+    comp       go to state 112
+    comp_term  go to state 113
+
+
+state 153
+
+   30 stmt_list: stmt_list . stmt
+   57 if_stmt: IF LPAREN condition RPAREN LBRACE stmt_list . RBRACE
+
+    ID         shift, and go to state 77
+    INT        shift, and go to state 1
+    FLOAT      shift, and go to state 2
+    DOUBLE     shift, and go to state 3
+    STRING     shift, and go to state 4
+    BOOL       shift, and go to state 5
+    WHILE      shift, and go to state 78
+    DO         shift, and go to state 79
+    IF         shift, and go to state 80
+    FOR        shift, and go to state 81
+    RBRACE     shift, and go to state 159
+    INCREMENT  shift, and go to state 82
+    DECREMENT  shift, and go to state 83
+
+    ID         [reduce using rule 3 (decls)]
+    INT        [reduce using rule 3 (decls)]
+    FLOAT      [reduce using rule 3 (decls)]
+    DOUBLE     [reduce using rule 3 (decls)]
+    STRING     [reduce using rule 3 (decls)]
+    BOOL       [reduce using rule 3 (decls)]
+    WHILE      [reduce using rule 3 (decls)]
+    DO         [reduce using rule 3 (decls)]
+    IF         [reduce using rule 3 (decls)]
+    FOR        [reduce using rule 3 (decls)]
+    RBRACE     [reduce using rule 3 (decls)]
+    INCREMENT  [reduce using rule 3 (decls)]
+    DECREMENT  [reduce using rule 3 (decls)]
+
+    decls       go to state 84
+    decl        go to state 8
+    type        go to state 9
+    stmt        go to state 102
+    while_stmt  go to state 87
+    if_stmt     go to state 88
+    for_stmt    go to state 89
+    inc_dec     go to state 90
+
+
+state 154
+
+   37 assign_stmt: type ID assign_op expr .
+   50 expr: expr . PLUS expr
+   51     | expr . MINUS expr
+   52     | expr . MULT expr
+   53     | expr . DIVIDE expr
+   54     | expr . MODULE expr
+
+    PLUS    shift, and go to state 60
+    MINUS   shift, and go to state 61
+    MULT    shift, and go to state 62
+    DIVIDE  shift, and go to state 63
+    MODULE  shift, and go to state 64
+
+    $default  reduce using rule 37 (assign_stmt)
+
+
+state 155
+
+   59 for_args: assign_stmt SEMI_COLON ID comp_op . ID SEMI_COLON inc_dec
+
+    ID  shift, and go to state 160
+
+
+state 156
+
+   30 stmt_list: stmt_list . stmt
+   58 for_stmt: FOR LPAREN for_args RPAREN LBRACE stmt_list . RBRACE
+
+    ID         shift, and go to state 77
+    INT        shift, and go to state 1
+    FLOAT      shift, and go to state 2
+    DOUBLE     shift, and go to state 3
+    STRING     shift, and go to state 4
+    BOOL       shift, and go to state 5
+    WHILE      shift, and go to state 78
+    DO         shift, and go to state 79
+    IF         shift, and go to state 80
+    FOR        shift, and go to state 81
+    RBRACE     shift, and go to state 161
+    INCREMENT  shift, and go to state 82
+    DECREMENT  shift, and go to state 83
+
+    ID         [reduce using rule 3 (decls)]
+    INT        [reduce using rule 3 (decls)]
+    FLOAT      [reduce using rule 3 (decls)]
+    DOUBLE     [reduce using rule 3 (decls)]
+    STRING     [reduce using rule 3 (decls)]
+    BOOL       [reduce using rule 3 (decls)]
+    WHILE      [reduce using rule 3 (decls)]
+    DO         [reduce using rule 3 (decls)]
+    IF         [reduce using rule 3 (decls)]
+    FOR        [reduce using rule 3 (decls)]
+    RBRACE     [reduce using rule 3 (decls)]
+    INCREMENT  [reduce using rule 3 (decls)]
+    DECREMENT  [reduce using rule 3 (decls)]
+
+    decls       go to state 84
+    decl        go to state 8
+    type        go to state 9
+    stmt        go to state 102
+    while_stmt  go to state 87
+    if_stmt     go to state 88
+    for_stmt    go to state 89
+    inc_dec     go to state 90
+
+
+state 157
+
+   55 while_stmt: WHILE LPAREN condition RPAREN LBRACE stmt_list RBRACE .
+
+    $default  reduce using rule 55 (while_stmt)
+
+
+state 158
+
+   56 while_stmt: DO LBRACE stmt_list RBRACE WHILE LPAREN condition . RPAREN SEMI_COLON
+   64 condition: condition . logic_op c_term
+
+    RPAREN  shift, and go to state 162
+    AND     shift, and go to state 123
+    OR      shift, and go to state 124
+    NOT     shift, and go to state 125
+
+    logic_op  go to state 126
+
+
+state 159
+
+   57 if_stmt: IF LPAREN condition RPAREN LBRACE stmt_list RBRACE .
+
+    $default  reduce using rule 57 (if_stmt)
+
+
+state 160
+
+   59 for_args: assign_stmt SEMI_COLON ID comp_op ID . SEMI_COLON inc_dec
+
+    SEMI_COLON  shift, and go to state 163
+
+
+state 161
+
+   58 for_stmt: FOR LPAREN for_args RPAREN LBRACE stmt_list RBRACE .
+
+    $default  reduce using rule 58 (for_stmt)
+
+
+state 162
+
+   56 while_stmt: DO LBRACE stmt_list RBRACE WHILE LPAREN condition RPAREN . SEMI_COLON
+
+    SEMI_COLON  shift, and go to state 164
+
+
+state 163
+
+   59 for_args: assign_stmt SEMI_COLON ID comp_op ID SEMI_COLON . inc_dec
+
+    ID         shift, and go to state 77
+    INCREMENT  shift, and go to state 82
+    DECREMENT  shift, and go to state 83
+
+    inc_dec  go to state 165
+
+
+state 164
+
+   56 while_stmt: DO LBRACE stmt_list RBRACE WHILE LPAREN condition RPAREN SEMI_COLON .
+
+    $default  reduce using rule 56 (while_stmt)
+
+
+state 165
+
+   59 for_args: assign_stmt SEMI_COLON ID comp_op ID SEMI_COLON inc_dec .
+
+    $default  reduce using rule 59 (for_args)
