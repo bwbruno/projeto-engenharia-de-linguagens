@@ -44,14 +44,18 @@ extern char * yytext;
 //%type <sValue> stm
 
 %%
-prog :  decls subprogrs  {} 
+prog :  decls_opt subprogrs  {} 
 	 ;
 
-decls : decl SEMI_COLON decls {}
-      |
+decls_opt : decls {}
+          |
+		  ;
+		  
+decls : decl  {}
+      | decls decl {}
 	  ;
 
-decl : type dimen_op ids {}
+decl : type dimen_op ids SEMI_COLON {}
      ;
 
 dimen_op : LBRACK RBRACK          {}
@@ -105,29 +109,43 @@ stmt_list : stmt           {}
 
 stmt : while_stmt					     	 {}
 	 | if_stmt                               {}
-//	 | decl SEMI_COLON                       {}
-     | decls                 {}
+	 | decl                                  {}
      | for_stmt                              {}
 	 | inc_dec SEMI_COLON                    {}
+	 | assign_stmt SEMI_COLON                {} 
+     | print_stmt  SEMI_COLON                {}
+     | scan_stmt                             {}
+	 | return_stmt                           {}
      ;
+
+return_stmt : RETURN expr SEMI_COLON         {}
+            ;
 /*
 decls : decl {}
 	  | decls SEMI_COLON decl {}
 	  ;
 
+
 decl : assign_stmt                           {} 
      | print_stmt                            {}
      | scan_stmt                             {}
      | type ID                               {}
-     | ID INCREMENT                          {}
-     | ID DECREMENT                          {}
+     | inc_dec                               {}
      | RETURN expr                           {}
-     |
      ;
 */
-assign_stmt : ID assign_op expr 			 {}
-			| type ID assign_op expr      	 {}
+
+assign_stmt : ID dimen_ind_op assign_op expr   {}
 			;
+
+dimen_ind_op : LBRACK ind_op RBRACK dimen_ind_op {} 
+			 |
+			 ;
+
+ind_op : ID {}
+	   | INT_NUMBER {}
+	   |
+	   ;
 
 assign_op : ASSIGN {}
           | ADD_ASSIGN {}
