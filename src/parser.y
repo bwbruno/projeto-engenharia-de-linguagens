@@ -58,8 +58,9 @@ decls : decls decl  {}
 decl : type dimen_op ids SEMI_COLON  {}
      ;
 
-dimen_op : dimen_op LBRACK RBRACK  {}
-         | LBRACK RBRACK           {}
+dimen_op : dimen_op LBRACK num_expr RBRACK      {}
+		 | LBRACK num_expr RBRACK               {}
+         | LBRACK ID RBRACK                     {}
 		 |
 		 ;
 
@@ -190,9 +191,10 @@ else_stmt_opt : ELSE LBRACE stmt_list RBRACE {}
               ;
 		  
 for_stmt : FOR LPAREN for_args RPAREN LBRACE stmt_list RBRACE  {} 
-         ;
+		 ;
 
 for_args : assign_stmt SEMI_COLON ID comp_op ID SEMI_COLON inc_dec  {}
+		 |
 		 ;
 
 inc_dec : ID INCREMENT {}
