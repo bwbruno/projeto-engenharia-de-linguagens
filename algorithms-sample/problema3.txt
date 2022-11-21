@@ -15,7 +15,7 @@ function main() : int
         return 1;
     }
 
-    int[3][colunasA] matrizA;
+    int[linhasA][colunasA] matrizA;
 
     for(int i = 0; i < linhasA ; i++){
         for(int j = 0 ; j < colunasA ; j++){
