@@ -1,0 +1,23 @@
+double[][] x = 10.5;
+double[] y = 25.5;
+int c;
+
+function main() : int
+{
+    double x = 10.5;
+    double y = 25.5;
+    int c = 20;
+    int c;
+    
+    a = 5;
+    a[i] = 5;
+    a[teste][] = 5;
+    a[][3] = 5;
+    
+    do {
+        print(x);
+        print("Hello World");
+    } while(true);
+
+    return 0;
+}
