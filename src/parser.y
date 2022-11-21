@@ -44,34 +44,38 @@ extern char * yytext;
 //%type <sValue> stm
 
 %%
-prog :  decls_opt subprogrs  {} 
+prog : decls_opt subprogrs  {} 
 	 ;
 
-decls_opt : decls {}
+decls_opt : decls  {}
           |
 		  ;
 		  
-decls : decl  {}
-      | decls decl {}
+decls : decls decl  {}
+      | decl        {}
 	  ;
 
-decl : type dimen_op ids SEMI_COLON {}
+decl : type dimen_op ids SEMI_COLON  {}
      ;
 
-dimen_op : LBRACK RBRACK          {}
-         | dimen_op LBRACK RBRACK {}
+dimen_op : dimen_op LBRACK RBRACK  {}
+         | LBRACK RBRACK           {}
 		 |
 		 ;
 
-ids : ids COMMA ID                {}
-    | ID assign_op expr           {}
-	| ID                          {}
-    | ids COMMA ID assign_op expr {}
+ids : ID assign_op LBRACE expr_list RBRACE  {}
+    | ids COMMA ID assign_op expr           {}
+	| ID assign_op expr                     {}
+    | ids COMMA ID                          {}
+	| ID                                    {}
 	;
 
+expr_list : expr_list COMMA expr {}
+		  | expr {}
+	      ;
 
-subprogrs : subprog           {}
-		  | subprogrs subprog {}
+subprogrs : subprogrs subprog  {}
+		  | subprog           {}
 		  ;
 
 subprog : procedure {}
@@ -85,82 +89,78 @@ function : FUNCTION ID LPAREN args_op RPAREN COLON type LBRACE stmt_list RBRACE 
 		 | FUNCTION MAIN LPAREN args_op RPAREN COLON type LBRACE stmt_list RBRACE {}
 		 ;
 
-args_op : args {}
+args_op : args  {}
         |
 		;
 
-args : args COMMA arg   {}
+args : args COMMA arg  {}
 	 | arg {}
 	 ;
 
-arg : type dimen_op ID {}
+arg : type dimen_op ID  {}
     ;
 
-type : INT      {}
-     | DOUBLE   {}
-     | FLOAT    {}
-     | STRING   {}
-     | BOOL     {}
+type : INT     {}
+     | DOUBLE  {}
+     | FLOAT   {}
+     | STRING  {}
+     | BOOL    {}
      ;
 
-stmt_list : stmt           {}
-		  | stmt_list stmt {} 
+stmt_list : stmt_list stmt  {}
+		  | stmt            {} 
 		  ;
 
 stmt : while_stmt					     	 {}
 	 | if_stmt                               {}
 	 | decl                                  {}
      | for_stmt                              {}
+	 | switch_stmt                           {}
 	 | inc_dec SEMI_COLON                    {}
 	 | assign_stmt SEMI_COLON                {} 
      | print_stmt  SEMI_COLON                {}
-     | scan_stmt                             {}
+     | scan_stmt SEMI_COLON                  {}
 	 | return_stmt                           {}
+	 | func_call SEMI_COLON  				 {}
      ;
 
-return_stmt : RETURN expr SEMI_COLON         {}
+func_call : ID LPAREN func_args RPAREN  {} 
+          ;
+
+func_args : func_args COMMA expr {}
+          | expr {}
+		  ;
+
+return_stmt : RETURN expr SEMI_COLON  {}
             ;
-/*
-decls : decl {}
-	  | decls SEMI_COLON decl {}
-	  ;
 
-
-decl : assign_stmt                           {} 
-     | print_stmt                            {}
-     | scan_stmt                             {}
-     | type ID                               {}
-     | inc_dec                               {}
-     | RETURN expr                           {}
-     ;
-*/
-
-assign_stmt : ID dimen_ind_op assign_op expr   {}
+assign_stmt : ID dimen_ind_op assign_op expr  {}
 			;
 
 dimen_ind_op : LBRACK ind_op RBRACK dimen_ind_op {} 
 			 |
 			 ;
 
-ind_op : ID {}
-	   | INT_NUMBER {}
-	   |
+ind_op : num_expr {}
+	   | 
 	   ;
 
-assign_op : ASSIGN {}
-          | ADD_ASSIGN {}
-          | SUB_ASSIGN {}
-          | MULT_ASSIGN {}
+assign_op : ASSIGN        {}
+          | ADD_ASSIGN    {}
+          | SUB_ASSIGN    {}
+          | MULT_ASSIGN   {}
           | DIVIDE_ASSIGN {}
           | MODULE_ASSIGN {}
           ;
 
-expr : ID                 {}
+expr : ID dimen_ind_op    {}
      | INT_NUMBER         {}
      | DOUBLE_NUMBER      {}
 	 | STRING_LITERAL     {}
 	 | TRUE               {}
 	 | FALSE              {}
+	 | func_call          {}
+	 | LPAREN expr RPAREN {}
      | expr PLUS expr     {}
      | expr MINUS expr    {}
      | expr MULT expr     {}
@@ -168,17 +168,31 @@ expr : ID                 {}
      | expr MODULE expr   {}
 	 ;
 
+num_expr : ID 						  {}
+		 | INT_NUMBER                 {}
+		 | LPAREN num_expr RPAREN     {}
+     	 | num_expr PLUS num_expr     {}
+		 | num_expr MINUS num_expr    {}
+		 | num_expr MULT num_expr     {}
+		 | num_expr DIVIDE num_expr   {}
+		 | num_expr MODULE num_expr   {}
+		 ; 
+
 while_stmt : WHILE LPAREN condition RPAREN LBRACE stmt_list RBRACE               {}
            | DO LBRACE stmt_list RBRACE WHILE LPAREN condition RPAREN SEMI_COLON {}
 		   ;
 
-if_stmt : IF LPAREN condition RPAREN LBRACE stmt_list RBRACE {}
+if_stmt : IF LPAREN condition RPAREN LBRACE stmt_list RBRACE else_stmt_opt {}
 		;
 
-for_stmt : FOR LPAREN for_args RPAREN LBRACE stmt_list RBRACE   {} 
+else_stmt_opt : ELSE LBRACE stmt_list RBRACE {}
+		      |                              {}
+              ;
+		  
+for_stmt : FOR LPAREN for_args RPAREN LBRACE stmt_list RBRACE  {} 
          ;
 
-for_args : assign_stmt SEMI_COLON ID comp_op ID SEMI_COLON inc_dec {}
+for_args : assign_stmt SEMI_COLON ID comp_op ID SEMI_COLON inc_dec  {}
 		 ;
 
 inc_dec : ID INCREMENT {}
@@ -192,6 +206,20 @@ print_stmt : PRINT LPAREN expr RPAREN {}
 
 scan_stmt : SCAN LPAREN ID RPAREN {}
 		  ; 
+
+switch_stmt : SWITCH LPAREN expr RPAREN LBRACE switch_cases RBRACE {}
+            ;
+
+switch_cases : switch_cases case {} 
+             | case              {}
+			 ;
+
+case : CASE INT_NUMBER COLON stmt_list BREAK SEMI_COLON      {}
+     | CASE DOUBLE_NUMBER COLON stmt_list BREAK SEMI_COLON   {}
+	 | CASE STRING_LITERAL COLON stmt_list BREAK SEMI_COLON  {}
+	 | CASE TRUE COLON stmt_list BREAK SEMI_COLON            {}
+	 | CASE FALSE COLON stmt_list BREAK SEMI_COLON           {}
+	 ;
 
 condition : condition logic_op c_term {}
           | c_term                    {}
@@ -221,6 +249,7 @@ logic_op : AND {}
          | OR  {}
 		 | NOT {}
 		 ;
+
 %%
 
 int main (void) {

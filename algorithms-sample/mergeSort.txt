@@ -16,7 +16,7 @@ procedure merge(int[] arr, int l, int m, int r)
     i = 0;
     j = 0;
     k = l;
-    while (i < n1 && j < n2) {
+    while (i < n1 & j < n2) {
         if (L[i] <= R[j]) {
             arr[k] = L[i];
             i++;
@@ -51,7 +51,7 @@ procedure mergeSort(int[] arr, int l, int r)
     }
 }
 
-procedure printArray(int[] A, int size)
+procedure printArrayProced(int[] A, int size)
 {
     int i;
     for (i = 0; i < size; i++){
@@ -66,12 +66,12 @@ function main() : int
     int[] arr = { 12, 11, 13, 5, 6, 7 };
     int arr_size = sizeof(arr) / sizeof(arr[0]);
     print("Given array is \n");
-    printArray(arr, arr_size);
+    printArrayProced(arr, arr_size);
 
     mergeSort(arr, 0, arr_size - 1);
  
     print("\nSorted array is \n");
-    printArray(arr, arr_size);
+    printArrayProced(arr, arr_size);
     return 0;
 }
 
