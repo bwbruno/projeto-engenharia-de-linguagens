@@ -8,7 +8,7 @@ build:
 exec:
 	./$(TARGET_EXEC)
 
-test-all: test-generico test-problema1 test-problema2 test-mergeSort test-switchCase
+test-all: test-generico test-problema1 test-problema2 test-problema3 test-mergeSort test-switchCase
 
 test-generico:
 	./$(TARGET_EXEC) < ../algorithms-sample/generico.txt
@@ -21,6 +21,9 @@ test-problema1:
 
 test-problema2:
 	./$(TARGET_EXEC) < ../algorithms-sample/problema2.txt
+
+test-problema3:
+	./$(TARGET_EXEC) < ../algorithms-sample/problema3.txt
 
 test-switchCase:
 	./$(TARGET_EXEC) < ../algorithms-sample/switchCase.txt

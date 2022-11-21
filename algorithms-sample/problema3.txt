@@ -10,12 +10,12 @@ function main() : int
     print("Digite a quantidade de Colunas da Matriz A: ");
     scan(colunasA);
 
-    if(linhasA <= 0 && colunasA <= 0){
+    if(linhasA <= 0 & colunasA <= 0){
         print("Error");
         return 1;
     }
 
-    int matrizA[linhasA][colunasA];
+    int[3][colunasA] matrizA;
 
     for(int i = 0; i < linhasA ; i++){
         for(int j = 0 ; j < colunasA ; j++){
@@ -47,7 +47,7 @@ function main() : int
         return 1;
     }
 
-    int matrizB[linhasB][colunasB];
+    int[linhasB][colunasB] matrizB;
 
     for(int i = 0; i < linhasB ; i++){
         for(int j = 0 ; j < colunasB ; j++){
@@ -90,7 +90,7 @@ function main() : int
         print("Não é possível realizar a multiplicação das matrizes A e B\n");
     }else{
         print("Multiplicação das Matrizes:\n\t");
-        int matrizC[linhasA][colunasB];
+        int[linhasA][colunasB] matrizC;
         int somaprod=0;
         for(int i=0; i<linhasA; i++){
             for(int j=0; j<colunasB; j++){
