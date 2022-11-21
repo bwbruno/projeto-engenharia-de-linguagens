@@ -10,19 +10,19 @@ function main() : int
     do {
         scan(input);
 
-        if(input >= 0 && input <= 25) {
+        if(input >= 0 & input <= 25) {
             i0_25++;
         }
 
-        if(input >= 26 && input <= 50) {
+        if(input >= 26 & input <= 50) {
             i26_50++;
         }
 
-        if(input >= 51 && input <= 75) {
+        if(input >= 51 & input <= 75) {
             i51_75++;
         }
 
-        if(input >= 76 && input <= 100) {
+        if(input >= 76 & input <= 100) {
             i76_100++;
         }
     
