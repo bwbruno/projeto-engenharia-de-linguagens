@@ -44,25 +44,49 @@ extern char * yytext;
 //%type <sValue> stm
 
 %%
-prog : decls_opt subprogrs  {} 
+prog : decls_opt subprogrs  {printf("prog\n");} 
 	 ;
 
-decls_opt : decls  {}
+decls_opt : decls  {printf("decls\n");}
           |
 		  ;
 		  
-decls : decls decl  {}
-      | decl        {}
+decls : decls decl  {printf("decls1\n");}
+      | decl        {printf("decls2\n");}
 	  ;
 
-decl : type dimen_op ids SEMI_COLON {}
+decl : type dimen_op ids SEMI_COLON     {printf("decl1\n");}
+	 | decl_init_list 					{}
      ;
 
-dimen_op : dimen_op LBRACK num_expr RBRACK      {}
-		 | LBRACK num_expr RBRACK               {}
-         | LBRACK ID RBRACK                     {}
+decl_init_list: type dimen_op ids ASSIGN LBRACE list RBRACE SEMI_COLON      {printf("decl_init_list1\n");}
+			  | type LBRACK RBRACK ids ASSIGN LBRACE list RBRACE SEMI_COLON {printf("decl_init_list2\n");}
+			  ;
+
+list: INT_NUMBER                {}
+    | INT_NUMBER COMMA list     {}
+	| DOUBLE_NUMBER             {}
+	| DOUBLE_NUMBER COMMA list  {}
+	| STRING_LITERAL            {}
+	| STRING_LITERAL COMMA list {}
+	| TRUE                      {}
+	| TRUE COMMA list           {}
+	| FALSE                     {}
+	| FALSE COMMA list          {}
+	;
+ 
+dimen_op : dimen_op LBRACK num_expr RBRACK      {printf("dimen_op1\n");}
+		 | LBRACK num_expr RBRACK               {printf("dimen_op2\n");}
+         | LBRACK ID RBRACK                     {printf("dimen_op3\n");}
 		 |
-		 ;
+		 ; 
+
+pointer_decl : POINTER LT pointer_type GT ids SEMI_COLON {}
+			 ;
+                         
+pointer_type : type 
+           	 | POINTER LT pointer_type GT {}
+			 ;
 
 ids : ID assign_op LBRACE expr_list RBRACE  {}
     | ids COMMA ID assign_op expr           {}
@@ -86,8 +110,8 @@ subprog : procedure {}
 procedure : PROCEDURE ID LPAREN args_op RPAREN LBRACE stmt_list RBRACE {}
           ;
 
-function : FUNCTION ID LPAREN args_op RPAREN COLON type LBRACE stmt_list RBRACE   {}
-		 | FUNCTION MAIN LPAREN args_op RPAREN COLON type LBRACE stmt_list RBRACE {}
+function : FUNCTION ID LPAREN args_op RPAREN COLON type LBRACE stmt_list RBRACE   {printf("function1\n");}
+		 | FUNCTION MAIN LPAREN args_op RPAREN COLON type LBRACE stmt_list RBRACE {printf("function2\n");}
 		 ;
 
 args_op : args  {}
@@ -99,6 +123,7 @@ args : args COMMA arg  {}
 	 ;
 
 arg : type dimen_op ID  {}
+	| pointer_type ID   {}
     ;
 
 type : INT     {}
@@ -132,7 +157,7 @@ func_args : func_args COMMA expr {}
           | expr {}
 		  ;
 
-return_stmt : RETURN expr SEMI_COLON  {}
+return_stmt : RETURN expr SEMI_COLON  {printf("return\n");}
             ;
 
 assign_stmt : ID dimen_ind_op assign_op expr  {}
@@ -203,7 +228,7 @@ inc_dec : ID INCREMENT {}
 		| DECREMENT ID {}
 		;
 
-print_stmt : PRINT LPAREN expr RPAREN {}
+print_stmt : PRINT LPAREN expr RPAREN {printf("print\n");}
            ;
 
 scan_stmt : SCAN LPAREN ID RPAREN           {}

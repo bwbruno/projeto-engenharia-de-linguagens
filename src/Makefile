@@ -27,3 +27,6 @@ test-problema3:
 
 test-switchCase:
 	./$(TARGET_EXEC) < ../algorithms-sample/switchCase.txt
+
+test-teste:
+	./$(TARGET_EXEC) < ../algorithms-sample/teste.txt

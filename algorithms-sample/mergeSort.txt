@@ -1,4 +1,4 @@
-procedure merge(Pointer<int> arr, int l, int m, int r)
+procedure merge(pointer<int> arr, int l, int m, int r)
 {
     int i, j, k;
     int n1 = m - l + 1;
@@ -42,7 +42,7 @@ procedure merge(Pointer<int> arr, int l, int m, int r)
     }
 }
 
-procedure mergeSort(Pointer<int> arr, int l, int r)
+procedure mergeSort(pointer<int> arr, int l, int r)
 {
     if (l < r) {
         int m = l + (r - l) / 2;
@@ -52,7 +52,7 @@ procedure mergeSort(Pointer<int> arr, int l, int r)
     }
 }
 
-procedure printArrayProced(Pointer<int> A, int size)
+procedure printArrayProced(pointer<int> A, int size)
 {
     int i;
     for (i = 0; i < size; i++){
@@ -67,7 +67,7 @@ function main() : int
     int[] arr = { 12, 11, 13, 5, 6, 7 };
     int arr_size = sizeof(arr) / sizeof(arr[0]);
     print("Given array is \n");
-    Pointer<int> ptr;
+    pointer<int> ptr;
     ptr.pointTo(arr);
     printArrayProced(ptr, arr_size);
 
