@@ -1,2 +1,5 @@
 *.out
 lex.yy.c
+y.*
+parser.*
+!parser.y
