@@ -42,7 +42,7 @@ function main() : int
     print("Digite a quantidade de Colunas da Matriz B: ");
     scan(colunasB);
 
-    if(linhasB <= 0 && colunasB <= 0){
+    if(linhasB <= 0 & colunasB <= 0){
         print("Error");
         return 1;
     }
@@ -70,7 +70,7 @@ function main() : int
 
     int soma = 0;
 
-    if(linhasA != linhasB || colunasA != colunasB){
+    if(linhasA != linhasB | colunasA != colunasB){
         print("Não é possível realizar a soma das matrizes A e B\n");
     }else{
         print("Soma das Matrizes:\n\t");

@@ -55,7 +55,7 @@ decls : decls decl  {}
       | decl        {}
 	  ;
 
-decl : type dimen_op ids SEMI_COLON  {}
+decl : type dimen_op ids SEMI_COLON {}
      ;
 
 dimen_op : dimen_op LBRACK num_expr RBRACK      {}
@@ -194,7 +194,7 @@ for_stmt : FOR LPAREN for_args RPAREN LBRACE stmt_list RBRACE  {}
 		 ;
 
 for_args : assign_stmt SEMI_COLON ID comp_op ID SEMI_COLON inc_dec  {}
-		 |
+		 | decls ID comp_op ID SEMI_COLON inc_dec        {}
 		 ;
 
 inc_dec : ID INCREMENT {}
@@ -206,7 +206,8 @@ inc_dec : ID INCREMENT {}
 print_stmt : PRINT LPAREN expr RPAREN {}
            ;
 
-scan_stmt : SCAN LPAREN ID RPAREN {}
+scan_stmt : SCAN LPAREN ID RPAREN           {}
+		  | SCAN LPAREN ID dimen_ind_op RPAREN {}
 		  ; 
 
 switch_stmt : SWITCH LPAREN expr RPAREN LBRACE switch_cases RBRACE {}
