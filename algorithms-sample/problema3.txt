@@ -1,0 +1,112 @@
+function main() : int
+{
+
+    int linhasA,colunasA;
+    int linhasB,colunasB;
+
+    print("Digite a quantidade de Linhas da Matriz A: ");
+    scan(linhasA);
+
+    print("Digite a quantidade de Colunas da Matriz A: ");
+    scan(colunasA);
+
+    if(linhasA <= 0 && colunasA <= 0){
+        print("Error");
+        return 1;
+    }
+
+    int matrizA[linhasA][colunasA];
+
+    for(int i = 0; i < linhasA ; i++){
+        for(int j = 0 ; j < colunasA ; j++){
+            scan(matrizA[i][j]);
+        }
+    }
+
+    print("Matriz A:\n\t");
+
+    for(int i = 0; i < linhasA ; i++){
+        for(int j = 0 ; j < colunasA ; j++){
+            print(matrizA[i][j] + " ");
+        }
+        if(i != linhasA - 1){
+            print("\n\t");
+        }else{
+            print("\n");
+        }
+    }
+
+    print("Digite a quantidade de Linhas da Matriz B: ");
+    scan(linhasB);
+
+    print("Digite a quantidade de Colunas da Matriz B: ");
+    scan(colunasB);
+
+    if(linhasB <= 0 && colunasB <= 0){
+        print("Error");
+        return 1;
+    }
+
+    int matrizB[linhasB][colunasB];
+
+    for(int i = 0; i < linhasB ; i++){
+        for(int j = 0 ; j < colunasB ; j++){
+            scan(matrizB[i][j]);
+        }
+    }
+
+    print("Matriz B:\n\t");
+
+    for(int i = 0; i < linhasB ; i++){
+        for(int j = 0 ; j < colunasB ; j++){
+            print(matrizB[i][j] + " ");
+        }
+        if(i != linhasB - 1){
+            print("\n\t");
+        }else{
+            print("\n");
+        }
+    }
+
+    int soma = 0;
+
+    if(linhasA != linhasB || colunasA != colunasB){
+        print("Não é possível realizar a soma das matrizes A e B\n");
+    }else{
+        print("Soma das Matrizes:\n\t");
+        for(int i = 0; i < linhasA ; i++){
+            for(int j = 0 ; j < colunasA ; j++){
+                print((matrizA[i][j] + matrizB[i][j]) + " ");
+            }
+            if(i != linhasA - 1){
+                print("\n\t");
+            }else{
+                print("\n");
+            }
+        }
+    }
+
+    if(colunasA != linhasB){
+        print("Não é possível realizar a multiplicação das matrizes A e B\n");
+    }else{
+        print("Multiplicação das Matrizes:\n\t");
+        int matrizC[linhasA][colunasB];
+        int somaprod=0;
+        for(int i=0; i<linhasA; i++){
+            for(int j=0; j<colunasB; j++){
+                somaprod=0;
+                for(int k=0; k<linhasA; k++){
+                    somaprod+= matrizA[i][k]*matrizB[k][j];
+                }
+                print(somaprod + " ");
+            }
+            if(i != linhasA - 1){
+                print("\n\t");
+            }else{
+                print("\n");
+            }
+        }
+    }
+
+    return 0;
+}
