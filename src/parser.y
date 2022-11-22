@@ -85,8 +85,7 @@ dimen_ops : dimen_ops dimen_op {}
           | dimen_op {}
           ;
 
-dimen_op : dimen_op LBRACK num_expr RBRACK      {}
-         | LBRACK num_expr RBRACK               {}
+dimen_op : LBRACK num_expr RBRACK               {}
          | LBRACK ID RBRACK                     {}
          ; 
 
