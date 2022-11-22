@@ -1,4 +1,4 @@
-int[][] matriz = {5, 5, 5, 2, 3, 5};
+int[] arr = {5, 5, 5, 2, 3, 5};
 
 function myFunc(double x, double y) : int {
 
@@ -14,7 +14,7 @@ function myFunc(double x, double y) : int {
         break;
         
         case "Teste":
-            a = (5 + 2) - matriz[a][0];
+            a = (5 + 2) - arr[0];
         break;
 
         case true:

@@ -28,6 +28,7 @@
 "string"                { return STRING; }
 "enum"                { return ENUM; }
 "pointer"                { return POINTER; }
+"pointTo"              {return POINT_TO;}
 
 "main"                     { return MAIN; }
 "procedure"                { return PROCEDURE; }
