@@ -13,8 +13,8 @@ $ gcc lex.yy.c parser.tab.c -o parser.exe
 
 **Linux**
 ```
-$ flex lexer.l 
-$ bison parser.y -d -v -g
+$ lex lexer.l 
+$ yacc parser.y -d -v -g
 $ gcc lex.yy.c parser.tab.c -o parser.out
 ```
 
