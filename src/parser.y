@@ -29,7 +29,7 @@ extern char * yytext;
 %token <iValue> INT_NUMBER
 %token <dValue> DOUBLE_NUMBER
 
-%token INT FLOAT DOUBLE STRING BOOL ENUM POINTER
+%token INT FLOAT DOUBLE STRING BOOL ENUM POINTER POINT_TO
 %token MAIN PROCEDURE FUNCTION RETURN
 %token WHILE DO IF ELSE FOR SWITCH CASE BREAK DEFAULT PRINT SCAN PRINT_ARRAY
 %token TRUE FALSE COMMA COLON SEMI_COLON LPAREN RPAREN LBRACK RBRACK LBRACE RBRACE DOT
@@ -55,14 +55,41 @@ decls : decls decl  {}
       | decl        {}
 	  ;
 
-decl : type dimen_op ids SEMI_COLON  {}
+decl : type dimen_op ids SEMI_COLON     {}
+	 | decl_init_list 				    {}
+	 |pointer_decl                      {}
      ;
 
+decl_init_list: type LBRACK RBRACK ids SEMI_COLON {}
+			  ;
+
+list: INT_NUMBER                {}
+    | INT_NUMBER COMMA list     {}
+	| DOUBLE_NUMBER             {}
+	| DOUBLE_NUMBER COMMA list  {}
+	| STRING_LITERAL            {}
+	| STRING_LITERAL COMMA list {}
+	| TRUE                      {}
+	| TRUE COMMA list           {}
+	| FALSE                     {}
+	| FALSE COMMA list          {}
+	;
+ 
 dimen_op : dimen_op LBRACK num_expr RBRACK      {}
 		 | LBRACK num_expr RBRACK               {}
          | LBRACK ID RBRACK                     {}
 		 |
-		 ;
+		 ; 
+
+pointer_decl : POINTER LT pointer_type GT ids SEMI_COLON {}
+			 ;
+                         
+pointer_type : type 
+           	 | POINTER LT pointer_type GT {}
+			 ;
+
+pointer_method: ID DOT POINT_TO LPAREN ID RPAREN SEMI_COLON {}
+			  ;
 
 ids : ID assign_op LBRACE expr_list RBRACE  {}
     | ids COMMA ID assign_op expr           {}
@@ -99,6 +126,7 @@ args : args COMMA arg  {}
 	 ;
 
 arg : type dimen_op ID  {}
+	| pointer_type ID   {}
     ;
 
 type : INT     {}
@@ -123,6 +151,7 @@ stmt : while_stmt					     	 {}
      | scan_stmt SEMI_COLON                  {}
 	 | return_stmt                           {}
 	 | func_call SEMI_COLON  				 {}
+	 | pointer_method                        {}
      ;
 
 func_call : ID LPAREN func_args RPAREN  {} 
@@ -194,7 +223,7 @@ for_stmt : FOR LPAREN for_args RPAREN LBRACE stmt_list RBRACE  {}
 		 ;
 
 for_args : assign_stmt SEMI_COLON ID comp_op ID SEMI_COLON inc_dec  {}
-		 |
+		 | decls ID comp_op ID SEMI_COLON inc_dec        {}
 		 ;
 
 inc_dec : ID INCREMENT {}
@@ -206,7 +235,8 @@ inc_dec : ID INCREMENT {}
 print_stmt : PRINT LPAREN expr RPAREN {}
            ;
 
-scan_stmt : SCAN LPAREN ID RPAREN {}
+scan_stmt : SCAN LPAREN ID RPAREN           {}
+		  | SCAN LPAREN ID dimen_ind_op RPAREN {}
 		  ; 
 
 switch_stmt : SWITCH LPAREN expr RPAREN LBRACE switch_cases RBRACE {}
