@@ -1,0 +1,10 @@
+function main() : int
+{
+    float x = 10.5;
+    float y = 25.5;
+    int c = 20;
+    
+    print(x*x-y+c);
+
+    return 0;
+}
