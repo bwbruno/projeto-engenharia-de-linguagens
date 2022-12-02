@@ -1,0 +1,17 @@
+int a = 2;
+
+function main(int b, int c) : int {
+    a = 0;
+    if (a < 2) {
+        int b = 1;
+    }
+    else {
+        b = c;
+    }
+    d = 0; 
+}
+
+function merge() : float {
+    int a = 1;
+    int b = 0;
+}

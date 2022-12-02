@@ -17,6 +17,9 @@ function main() : int
     do {
         print(x);
         print("Hello World");
+        if(a < b) {
+            int oi;
+        }
     } while(true);
 
     return 0;
