@@ -3,7 +3,7 @@ TARGET_EXEC := parser.exe
 build:
 	bison -d -v -g parser.y
 	flex lexer.l
-	gcc parser.tab.c lex.yy.c -o $(TARGET_EXEC) 
+	gcc parser.tab.c lex.yy.c -o $(TARGET_EXEC) -g
 
 clean:
 	rm *.tab.* *.yy.c *.out *.exe *.dot

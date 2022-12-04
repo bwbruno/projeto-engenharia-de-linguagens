@@ -22,6 +22,14 @@ struct node {
     char *token; 
 };
 
+typedef union Value{
+    int iValue;   /* integer value */
+    float fValue; /* double value  */
+    double dValue;/* double value  */
+    char cValue;  /* char value    */
+    char *sValue; /* string value  */
+} Value;
+
 void print_tree(struct node*);
 void print_preorder(struct node *);
 struct node* mknode(struct node *left, struct node *right, char *token);
@@ -31,11 +39,7 @@ char *insert_key(char *id);
 
 
 %union {
-    int    iValue;   /* integer value */
-    float  fValue;   /* double value */
-    double dValue;   /* double value */
-    char   cValue;   /* char value */
-    char *sValue;    /* string value */
+    union Value *value;
     struct bucket *symbol;
     struct var_name { 
         char name[100]; 
@@ -43,17 +47,16 @@ char *insert_key(char *id);
     } nd_obj; 
 };
 
-%token <sValue> STRING_LITERAL
-%token <iValue> INT_NUMBER
-%token <fValue> DOUBLE_NUMBER
-%token <sValue> ID
-
-%token INT FLOAT DOUBLE STRING BOOL ENUM POINTER POINT_TO
+%token <nd_obj> STRING_LITERAL
+%token <nd_obj> INT_NUMBER
+%token <nd_obj> DOUBLE_NUMBER
+%token <nd_obj> ID
+%token <nd_obj> INT FLOAT DOUBLE STRING BOOL ENUM POINTER POINT_TO
 %token <nd_obj> MAIN PROCEDURE FUNCTION RETURN
 %token <nd_obj> WHILE DO IF ELSE FOR SWITCH CASE BREAK DEFAULT PRINT SCAN PRINT_ARRAY
-%token TRUE FALSE COMMA COLON SEMI_COLON LPAREN RPAREN LBRACK RBRACK LBRACE RBRACE DOT
-%token INCREMENT DECREMENT PLUS MINUS MULT DIVIDE MODULE ADD_ASSIGN SUB_ASSIGN MULT_ASSIGN DIVIDE_ASSIGN MODULE_ASSIGN ASSIGN
-%token EQ NEQ LT LE GT GE AND OR NOT
+%token <nd_obj> TRUE FALSE COMMA COLON SEMI_COLON LPAREN RPAREN LBRACK RBRACK LBRACE RBRACE DOT
+%token <nd_obj> INCREMENT DECREMENT PLUS MINUS MULT DIVIDE MODULE ADD_ASSIGN SUB_ASSIGN MULT_ASSIGN DIVIDE_ASSIGN MODULE_ASSIGN ASSIGN
+%token <nd_obj> EQ NEQ LT LE GT GE AND OR NOT
 
 %left PLUS MINUS
 %left MULT DIVIDE MODULE
@@ -76,9 +79,9 @@ prog : { push(scopes, "#global"); } decls_opt subprogrs
 
 decls_opt : decls  
             {
-                $$.nd = mknode($1.nd, NULL, "decls_opt");
+                $$.nd = mknode($1.nd, NULL, "decls-opt");
             }
-            | { $$.nd = NULL; }
+            | { printf("decls_opt:: \n"); $$.nd = NULL; }
             ;
           
 decls : decls decl
@@ -109,37 +112,37 @@ decl : type dimen_op_opt ids SEMI_COLON
 decl_init_list : type LBRACK RBRACK ids SEMI_COLON
                  {
                    struct node *temp = mknode($1.nd, NULL, "ids");
-                   $$.nd = mknode(temp, NULL, "decl_init_list");
+                   $$.nd = mknode(temp, NULL, "decl-init-list");
                  }
                  ;
 
 dimen_op_opt : dimen_ops
                {
-                 $$.nd = mknode($1.nd, NULL, "decl_op_opt");
+                 $$.nd = mknode($1.nd, NULL, "decl-op-opt");
                }
                | { $$.nd = NULL; }
                ;
 
 dimen_ops : dimen_ops dimen_op
             {
-              $$.nd = mknode($1.nd, $2.nd, "decl_ops");
+              $$.nd = mknode($1.nd, $2.nd, "decl-ops");
             }
             | dimen_op
             {
-              $$.nd = mknode($1.nd, NULL, "decl_op");
+              $$.nd = mknode($1.nd, NULL, "decl-op");
             }
             ;
 
 dimen_op : LBRACK num_expr RBRACK
            {
-             $$.nd = mknode($2.nd, NULL, "decl_op");
+             $$.nd = mknode($2.nd, NULL, "decl-op");
            }
            ; 
 
 pointer_decl : POINTER LT pointer_type GT ids SEMI_COLON
                {
                  struct node *temp = mknode($3.nd, NULL, "ids");
-                 $$.nd = mknode(temp, NULL, "pointer_decl");
+                 $$.nd = mknode(temp, NULL, "pointer-decl");
                }
                ;
                          
@@ -149,7 +152,7 @@ pointer_type : type
                }
                | POINTER LT pointer_type GT
                {
-                 $$.nd = mknode($3.nd, NULL, "pointer_type");
+                 $$.nd = mknode($3.nd, NULL, "pointer-type");
                }
                ;
 
@@ -158,148 +161,340 @@ pointer_method : ID DOT POINT_TO LPAREN ID RPAREN SEMI_COLON {}
 
 ids : ID assign_op LBRACE expr_list RBRACE
       {
-          printf("ids: %s at line %d\n", insert_key($1), yylineno);
+          printf("ids: %s at line %d\n", insert_key($1.name), yylineno);
+          $$.nd = mknode($2.nd, $4.nd, $1.name);
       }
       | ids COMMA ID assign_op expr
       {
-          printf("ids: %s at line %d\n", $3, yylineno);
+          printf("ids: %s at line %d\n", $3.name, yylineno);
+          $$.nd = mknode($4.nd, $5.nd, "ids");
       }
       | ID assign_op expr
       {
-          printf("ids: %s at line %d\n", insert_key($1), yylineno);
+          printf("ids: %s at line %d\n", insert_key($1.name), yylineno);
+          $$.nd = mknode($2.nd, $3.nd, $1.name);
       }
       | ids COMMA ID
       {
-          printf("ids: %s at line %d\n", $3, yylineno);
+          printf("ids: %s at line %d\n", $3.name, yylineno);
+          $$.nd = mknode($1.nd, NULL, "ids");
       }
       | ID
       {
-          printf("ids: %s at line %d\n", insert_key($1), yylineno);
+          printf("ids: %s at line %d\n", insert_key($1.name), yylineno);
+          $$.nd = mknode(NULL, NULL, $1.name);
       }
       ;
 
-expr_list : expr_list COMMA expr {}
-          | expr                 {}
-          ;
+expr_list : expr_list COMMA expr 
+            {
+                $$.nd = mknode($1.nd, $3.nd, "expr-list");
+            }
+            | expr                 
+            {
+                $$.nd = mknode($1.nd, NULL, "expr");
+            }
+            ;
 
 subprogrs : subprogrs subprog  
-          | subprog 
+            {
+                $$.nd = mknode($1.nd, $2.nd, "subprogrs");
+            }
+            | subprog 
+            {
+                $$.nd = mknode($1.nd, NULL, "subprog");
+            }
+            ;
+
+subprog : procedure
+          {
+              $$.nd = mknode($1.nd, NULL, "procedure");
+          }
+          | function
+          {
+              $$.nd = mknode($1.nd, NULL, "function");
+          }
           ;
 
-subprog : procedure {}
-        | function  {}
+procedure : PROCEDURE ID LPAREN args_op RPAREN LBRACE stmt_list RBRACE
+            {
+                $$.nd = mknode($4.nd, $7.nd, $2.name);
+            }
+            ;
+
+function : FUNCTION ID LPAREN args_op RPAREN COLON type LBRACE stmt_list RBRACE
+           {
+               struct node *temp = mknode($4.nd, $9.nd, $2.name);
+               $$.nd = mknode($7.nd, temp, "type");
+           }
+           | FUNCTION MAIN { push(scopes, $2.name); } LPAREN args_op RPAREN COLON type LBRACE stmt_list RBRACE
+           {
+               struct node *temp = mknode($5.nd, $10.nd, $2.name);
+               $$.nd = mknode($8.nd, temp, "type");
+           }
+           ;
+
+args_op : args
+          {
+              $$.nd = mknode($1.nd, NULL, "args-op");
+          }
+        | { $$.nd = NULL; }
         ;
 
-procedure : PROCEDURE ID LPAREN args_op RPAREN LBRACE stmt_list RBRACE              {}
-          ;
+args : args COMMA arg
+       {
+           $$.nd = mknode($1.nd, $3.nd, "args");
+       }
+       | arg
+       {
+           $$.nd = mknode($1.nd, NULL, "arg");
+       }
+       ;
 
-function : FUNCTION ID LPAREN args_op RPAREN COLON type LBRACE stmt_list RBRACE     {}
-         | FUNCTION MAIN LPAREN args_op RPAREN COLON type LBRACE stmt_list RBRACE   {}
-         ;
+arg : type dimen_op ID 
+      {
+          $$.nd = mknode($1.nd, $2.nd, $3.name);
+      }
+      | pointer_type ID  
+      {
+          $$.nd = mknode($1.nd, NULL, $2.name);
+      }
+      ;
 
-args_op : args  {}
-        |       {}
-        ;
-
-args : args COMMA arg {}
-     | arg {}
-     ;
-
-arg : type  dimen_op ID 
-    | pointer_type  ID  
-    ;
-
-type : INT     {}
-     | DOUBLE  {}
-     | FLOAT   {}
-     | STRING  {}
-     | BOOL    {}
+type : INT     { $$.nd = mknode(NULL, NULL, $1.name); }
+     | DOUBLE  { $$.nd = mknode(NULL, NULL, $1.name); }
+     | FLOAT   { $$.nd = mknode(NULL, NULL, $1.name); }
+     | STRING  { $$.nd = mknode(NULL, NULL, $1.name); }
+     | BOOL    { $$.nd = mknode(NULL, NULL, $1.name); }
      ;
 
 stmt_list : stmt_list stmt 
-          | stmt
-          ;
-
-stmt : while_stmt                            {}
-     | assign_stmt SEMI_COLON                {}
-     | if_stmt                               {}
-     | for_stmt                              {}
-     | switch_stmt                           {}
-     | inc_dec SEMI_COLON                    {}
-     | print_stmt  SEMI_COLON                {}
-     | scan_stmt SEMI_COLON                  {}
-     | return_stmt                           {}
-     | func_call SEMI_COLON                  {}
-     | pointer_method                        {}
-     | decl                                  {}
-     ;
-
-func_call : ID LPAREN func_args RPAREN  {} 
-          ;
-
-func_args : func_args COMMA expr {}
-          | expr {}
-          ;
-
-return_stmt : RETURN expr SEMI_COLON  {}
+            {
+                $$.nd = mknode($1.nd, $2.nd, "stmt_list");
+            }
+            | stmt
+            {
+                $$.nd = mknode($1.nd, NULL, "stmt");
+            }
             ;
 
-assign_stmt : ID dimen_ind_op assign_op expr  {}
-            ;
-
-dimen_ind_op : LBRACK ind_op RBRACK dimen_ind_op {} 
-             | {}
-             ;
-
-ind_op : num_expr {}
-       |          {} 
+stmt : while_stmt
+       {
+           $$.nd = mknode($1.nd, NULL, "while-stmt");
+       }
+       | assign_stmt SEMI_COLON
+       {
+          $$.nd = mknode($1.nd, NULL, "assign-stmt");
+       }
+       | if_stmt
+       {
+          $$.nd = mknode($1.nd, NULL, "if-stmt");
+       }
+       | for_stmt
+       {
+          $$.nd = mknode($1.nd, NULL, "for-stmt");
+       }
+       | switch_stmt
+       {
+          $$.nd = mknode($1.nd, NULL, "switch-stmt");
+       }
+       | inc_dec SEMI_COLON
+       {
+          $$.nd = mknode($1.nd, NULL, "inc-dec");
+       }
+       | print_stmt  SEMI_COLON
+       {
+          $$.nd = mknode($1.nd, NULL, "print-stmt");
+       }
+       | scan_stmt SEMI_COLON
+       {
+          $$.nd = mknode($1.nd, NULL, "scan-stmt");
+       }
+       | return_stmt
+       {
+          $$.nd = mknode($1.nd, NULL, "return-stmt");
+       }
+       | func_call SEMI_COLON
+       {
+          $$.nd = mknode($1.nd, NULL, "func-call ");
+       }
+       | pointer_method
+       {
+          $$.nd = mknode($1.nd, NULL, "pointer-method");
+       }
+       | decl
+       {
+          $$.nd = mknode($1.nd, NULL, "decl");
+       }
        ;
 
-assign_op : ASSIGN        {}
-          | ADD_ASSIGN    {}
-          | SUB_ASSIGN    {}
-          | MULT_ASSIGN   {}
-          | DIVIDE_ASSIGN {}
-          | MODULE_ASSIGN {}
+func_call : ID LPAREN func_args RPAREN 
+            {
+               $$.nd = mknode($3.nd, NULL, "func-call");
+            }
+            ;
+
+func_args : func_args COMMA expr
+            {
+               $$.nd = mknode($1.nd, $3.nd, "func-args");
+            }
+            | expr
+            {
+               $$.nd = mknode($1.nd, NULL, "expr");
+            }
+            ;
+
+return_stmt : RETURN expr SEMI_COLON
+              {
+                 $$.nd = mknode($2.nd, NULL, "expr");
+              }
+              ;
+
+assign_stmt : ID dimen_ind_op assign_op expr
+              {
+                 struct node *temp = mknode($2.nd, $4.nd, $1.name);
+                 $$.nd = mknode($3.nd, temp, "assign-op");
+              }
+              ;
+
+dimen_ind_op : LBRACK ind_op RBRACK dimen_ind_op 
+               {
+                  $$.nd = mknode($2.nd, $4.nd, "dimen-ind-op");
+               }
+               | { $$.nd = NULL; }
+               ;
+
+ind_op : num_expr
+         {
+            $$.nd = mknode($1.nd, NULL, "ind_op");
+         }
+         | { $$.nd = NULL; }
+         ;
+
+assign_op : ASSIGN        { $$.nd = mknode(NULL, NULL, $1.name); }
+          | ADD_ASSIGN    { $$.nd = mknode(NULL, NULL, $1.name); }
+          | SUB_ASSIGN    { $$.nd = mknode(NULL, NULL, $1.name); }
+          | MULT_ASSIGN   { $$.nd = mknode(NULL, NULL, $1.name); }
+          | DIVIDE_ASSIGN { $$.nd = mknode(NULL, NULL, $1.name); }
+          | MODULE_ASSIGN { $$.nd = mknode(NULL, NULL, $1.name); }
           ;
 
-expr : ID dimen_ind_op    {}
-     | INT_NUMBER         {}
-     | DOUBLE_NUMBER      {}
-     | STRING_LITERAL     {}
-     | TRUE               {}
-     | FALSE              {}
-     | func_call          {}
-     | LPAREN expr RPAREN {}
-     | expr PLUS expr     {}
-     | expr MINUS expr    {}
-     | expr MULT expr     {}
-     | expr DIVIDE expr   {}
-     | expr MODULE expr   {}
-     ;
+expr : ID dimen_ind_op    
+       {
+          $$.nd = mknode($2.nd, NULL, $1.name);
+       }
+       | INT_NUMBER         
+       {
+          $$.nd = mknode(NULL, NULL, $1.name);
+       }
+       | DOUBLE_NUMBER      
+       {
+          $$.nd = mknode(NULL, NULL, $1.name);
+       }
+       | STRING_LITERAL     
+       {
+          $$.nd = mknode(NULL, NULL, $1.name);
+       }
+       | TRUE               
+       {
+          $$.nd = mknode(NULL, NULL, $1.name);
+       }
+       | FALSE              
+       {
+          $$.nd = mknode(NULL, NULL, $1.name);
+       }
+       | func_call          
+       {
+          $$.nd = mknode($1.nd, NULL, "func-call");
+       }
+       | LPAREN expr RPAREN 
+       {
+          $$.nd = mknode($2.nd, NULL, "expr");
+       }
+       | expr PLUS expr     
+       {
+          $$.nd = mknode($1.nd, $3.nd, $2.name);
+       }
+       | expr MINUS expr    
+       {
+          $$.nd = mknode($1.nd, $3.nd, $2.name);
+       }
+       | expr MULT expr     
+       {
+          $$.nd = mknode($1.nd, $3.nd, $2.name);
+       }
+       | expr DIVIDE expr   
+       {
+          $$.nd = mknode($1.nd, $3.nd, $2.name);
+       }
+       | expr MODULE expr   
+       {
+          $$.nd = mknode($1.nd, $3.nd, $2.name);
+       }
+       ;
 
-num_expr : ID                         {}
-         | INT_NUMBER                 {}
-         | LPAREN num_expr RPAREN     {}
-         | num_expr PLUS num_expr     {}
-         | num_expr MINUS num_expr    {}
-         | num_expr MULT num_expr     {}
-         | num_expr DIVIDE num_expr   {}
-         | num_expr MODULE num_expr   {}
-         ; 
+num_expr : ID
+           {
+              $$.nd = mknode(NULL, NULL, $1.name);
+           }
+           | INT_NUMBER
+           {
+              $$.nd = mknode(NULL, NULL, $1.name);
+           }
+           | LPAREN num_expr RPAREN
+           {
+              $$.nd = mknode($2.nd, NULL, "num-expr");
+           }
+           | num_expr PLUS num_expr
+           {
+              $$.nd = mknode($1.nd, $3.nd, $2.name);
+           }
+           | num_expr MINUS num_expr
+           {
+              $$.nd = mknode($1.nd, $3.nd, $2.name);
+           }
+           | num_expr MULT num_expr
+           {
+              $$.nd = mknode($1.nd, $3.nd, $2.name);
+           }
+           | num_expr DIVIDE num_expr
+           {
+              $$.nd = mknode($1.nd, $3.nd, $2.name);
+           }
+           | num_expr MODULE num_expr
+           {
+              $$.nd = mknode($1.nd, $3.nd, $2.name);
+           }
+           ; 
 
-while_stmt : WHILE LPAREN condition RPAREN  LBRACE stmt_list RBRACE               {}
-           | DO  LBRACE stmt_list RBRACE WHILE LPAREN condition RPAREN SEMI_COLON {}
-           ;
+while_stmt : WHILE LPAREN condition RPAREN LBRACE stmt_list RBRACE
+             {
+                $$.nd = mknode($3.nd, $6.nd, $1.name);
+             }
+             | DO LBRACE stmt_list RBRACE WHILE LPAREN condition RPAREN SEMI_COLON
+             {
+                $$.nd = mknode($3.nd, $7.nd, "do-while");
+             }
+             ;
 
-if_stmt : IF LPAREN condition RPAREN  LBRACE stmt_list RBRACE else_stmt_opt {}
+if_stmt : IF LPAREN condition RPAREN LBRACE stmt_list RBRACE else_stmt_opt
+          {
+             struct node *temp = mknode($6.nd, $8.nd, "body");
+             $$.nd = mknode($3.nd, temp, "if-else");
+          }
         ;
 
-else_stmt_opt : ELSE  LBRACE stmt_list RBRACE {}
-              | {} 
-              ;
+else_stmt_opt : ELSE LBRACE stmt_list RBRACE 
+                {
+                   $$.nd = mknode($3.nd, NULL, $1.name);
+                }
+                | { $$.nd = NULL; }
+                ;
           
-for_stmt : FOR  LPAREN for_args RPAREN LBRACE stmt_list RBRACE   {}
+for_stmt : FOR LPAREN for_args RPAREN LBRACE stmt_list RBRACE
+           {
+              $$.nd = mknode($3.nd, $6.nd, $1.name);
+           }
          ;
 
 for_args : assign_stmt SEMI_COLON ID comp_op ID SEMI_COLON inc_dec  {}
@@ -312,53 +507,79 @@ inc_dec : ID INCREMENT {}
         | DECREMENT ID {}
         ;
 
-print_stmt : PRINT LPAREN expr RPAREN {}
-           ;
-
-scan_stmt : SCAN LPAREN ID dimen_ind_op RPAREN {}
-          ; 
-
-switch_stmt : SWITCH LPAREN expr RPAREN LBRACE switch_cases RBRACE {}
-            ;
-
-switch_cases : switch_cases case {} 
-             | case              {}
+print_stmt : PRINT LPAREN expr RPAREN
+             {
+                $$.nd = mknode($3.nd, NULL, $1.name);
+             }
              ;
 
-case : CASE INT_NUMBER COLON stmt_list BREAK SEMI_COLON      {}
-     | CASE DOUBLE_NUMBER COLON stmt_list BREAK SEMI_COLON   {}
-     | CASE STRING_LITERAL COLON stmt_list BREAK SEMI_COLON  {}
-     | CASE TRUE COLON stmt_list BREAK SEMI_COLON            {}
-     | CASE FALSE COLON stmt_list BREAK SEMI_COLON           {}
+scan_stmt : SCAN LPAREN ID dimen_ind_op RPAREN
+            {
+               $$.nd = mknode($4.nd, NULL, $1.name);
+            }
+            ; 
+
+switch_stmt : SWITCH LPAREN expr RPAREN LBRACE switch_cases RBRACE
+              {
+                 $$.nd = mknode($3.nd, $6.nd, $1.name);
+              }
+              ;
+
+switch_cases : switch_cases case 
+               {
+                  $$.nd = mknode($1.nd, $2.nd, "switch-cases");
+               }
+               | case
+               {
+                  $$.nd = mknode($1.nd, NULL, "case");
+               }
+               ;
+
+case : CASE INT_NUMBER COLON stmt_list BREAK SEMI_COLON      { $$.nd = mknode($4.nd, NULL, $1.name); }
+     | CASE DOUBLE_NUMBER COLON stmt_list BREAK SEMI_COLON   { $$.nd = mknode($4.nd, NULL, $1.name); }
+     | CASE STRING_LITERAL COLON stmt_list BREAK SEMI_COLON  { $$.nd = mknode($4.nd, NULL, $1.name); }
+     | CASE TRUE COLON stmt_list BREAK SEMI_COLON            { $$.nd = mknode($4.nd, NULL, $1.name); }
+     | CASE FALSE COLON stmt_list BREAK SEMI_COLON           { $$.nd = mknode($4.nd, NULL, $1.name); }
      ;
 
-condition : condition logic_op c_term {}
-          | c_term                    {}
-          ;
+condition : condition logic_op c_term
+            {
+               struct node *temp = mknode($1.nd, $3.nd, "condition");
+               $$.nd = mknode($2.nd, temp, "logic-op");
+            }
+            | c_term
+            {
+               $$.nd = mknode($1.nd, NULL, "c-term");
+            }
+            ;
 
-c_term : ID    { printf("c_term:? %s\n", yytext); }
-       | TRUE  {}
-       | FALSE {}
-       | comp  {}
+c_term : ID    { $$.nd = mknode(NULL, NULL, $1.name); }
+       | TRUE  { $$.nd = mknode(NULL, NULL, $1.name); }
+       | FALSE { $$.nd = mknode(NULL, NULL, $1.name); }
+       | comp  { $$.nd = mknode($1.nd, NULL, "comp"); }
        ;
        
-comp : comp_term comp_op comp_term {}
-     ;
+comp : comp_term comp_op comp_term
+       {
+          struct node *temp = mknode($1.nd, $3.nd, "comp-op");
+          $$.nd = mknode($2.nd, temp, "comp");
+       }
+       ;
 
-comp_term : expr {}
+comp_term : expr { $$.nd = mknode($1.nd, NULL, "expr"); }
           ;
 
-comp_op : EQ  {}
-        | NEQ {}
-        | GE  {}
-        | LE  {}
-        | GT  {}
-        | LT  {}
+comp_op : EQ  { $$.nd = mknode(NULL, NULL, $1.name); }
+        | NEQ { $$.nd = mknode(NULL, NULL, $1.name); }
+        | GE  { $$.nd = mknode(NULL, NULL, $1.name); }
+        | LE  { $$.nd = mknode(NULL, NULL, $1.name); }
+        | GT  { $$.nd = mknode(NULL, NULL, $1.name); }
+        | LT  { $$.nd = mknode(NULL, NULL, $1.name); }
         ;
 
-logic_op : AND {}
-         | OR  {}
-         | NOT {}
+logic_op : AND { $$.nd = mknode(NULL, NULL, $1.name); }
+         | OR  { $$.nd = mknode(NULL, NULL, $1.name); }
+         | NOT { $$.nd = mknode(NULL, NULL, $1.name); }
          ;
 
 %%
@@ -369,7 +590,7 @@ int main (int argc, char *argv[]) {
 
     yyparse();
 
-    if (strcmp("--dump-symboltable", argv[1]) == 0 && (argc > 2)) {
+    if ((argc > 2) && strcmp("--dump-symboltable", argv[1]) == 0) {
         char *filename = argv[2];
         yyout = fopen(filename, "w");
         dump_symboltable(yyout);

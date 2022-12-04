@@ -23,24 +23,21 @@ int line = 0;
 %%
 
 [ \t\n]                 ;
-[0-9]+                  {
-                           yylval.iValue = atoi(yytext);
-                           return INT_NUMBER;
-                        }
+[0-9]+                  { strcpy(yylval.nd_obj.name,(yytext)); return INT_NUMBER; }
 
 ((\+|-)?([0-9]+)(\.[0-9]+)?)|((\+|-)?\.?[0-9]+) {
-                           yylval.dValue = strtod(yytext, NULL);
+                           strcpy(yylval.nd_obj.name,(yytext));
                            return DOUBLE_NUMBER;
                         }
 
-"int"                   { return INT; }
-"double"                { return DOUBLE; }
-"bool"                  { return BOOL; }
-"float"                 { return FLOAT; }
-"string"                { return STRING; }
-"enum"                  { return ENUM; }
-"pointer"               { return POINTER; }
-"pointTo"               { return POINT_TO; }
+"int"                   { strcpy(yylval.nd_obj.name,(yytext)); return INT; }
+"double"                { strcpy(yylval.nd_obj.name,(yytext)); return DOUBLE; }
+"bool"                  { strcpy(yylval.nd_obj.name,(yytext)); return BOOL; }
+"float"                 { strcpy(yylval.nd_obj.name,(yytext)); return FLOAT; }
+"string"                { strcpy(yylval.nd_obj.name,(yytext)); return STRING; }
+"enum"                  { strcpy(yylval.nd_obj.name,(yytext)); return ENUM; }
+"pointer"               { strcpy(yylval.nd_obj.name,(yytext)); return POINTER; }
+"pointTo"               { strcpy(yylval.nd_obj.name,(yytext)); return POINT_TO; }
 "main"                  { strcpy(yylval.nd_obj.name,(yytext)); return MAIN; }
 "procedure"             { strcpy(yylval.nd_obj.name,(yytext)); return PROCEDURE; }
 "function"              { strcpy(yylval.nd_obj.name,(yytext)); return FUNCTION; }
@@ -56,56 +53,53 @@ int line = 0;
 "default"               { strcpy(yylval.nd_obj.name,(yytext)); return DEFAULT; }
 "print"                 { strcpy(yylval.nd_obj.name,(yytext)); return PRINT; }
 "scan"                  { strcpy(yylval.nd_obj.name,(yytext)); return SCAN; }
-([\"].*?[\"])           { 
-                           yylval.sValue = strdup(yytext);
-                           return STRING_LITERAL;
-                        }   
+([\"].*?[\"])           { strcpy(yylval.nd_obj.name,(yytext)); return STRING_LITERAL; }   
 "printArray"            { strcpy(yylval.nd_obj.name,(yytext)); return PRINT_ARRAY; }
-"true"                  { return TRUE; }
-"false"                 { return FALSE; }
-","                     { return COMMA; }
-":"                     { return COLON; }
-";"                     { return SEMI_COLON; }
-"("                     { return LPAREN; }
-")"                     { return RPAREN; }
-"["                     { return LBRACK; }
-"]"                     { return RBRACK; }
-"{"                     { return LBRACE; }
-"}"                     { return RBRACE; }
-"."                     { return DOT; }
-     
-"++"                    { return INCREMENT; }
-"--"                    { return DECREMENT; }
-"+"                     { return PLUS; }
-"-"                     { return MINUS; }
-"*"                     { return MULT; }
-"/"                     { return DIVIDE; }
-"%"                     { return MODULE; }
-"+="                    { return ADD_ASSIGN; }
-"-="                    { return SUB_ASSIGN; }
-"*="                    { return MULT_ASSIGN; }
-"/="                    { return DIVIDE_ASSIGN; }
-"%="                    { return MODULE_ASSIGN; }
-"="                     { return ASSIGN; }
-     
-"=="                    { return EQ; }
-"!="                    { return NEQ; }
-"<"                     { return LT; }
-"<="                    { return LE; }
-">"                     { return GT; }
-">="                    { return GE; }
+"true"                  { strcpy(yylval.nd_obj.name,(yytext)); return TRUE; }
+"false"                 { strcpy(yylval.nd_obj.name,(yytext)); return FALSE; }
+","                     { strcpy(yylval.nd_obj.name,(yytext)); return COMMA; }
+":"                     { strcpy(yylval.nd_obj.name,(yytext)); return COLON; }
+";"                     { strcpy(yylval.nd_obj.name,(yytext)); return SEMI_COLON; }
+"("                     { strcpy(yylval.nd_obj.name,(yytext)); return LPAREN; }
+")"                     { strcpy(yylval.nd_obj.name,(yytext)); return RPAREN; }
+"["                     { strcpy(yylval.nd_obj.name,(yytext)); return LBRACK; }
+"]"                     { strcpy(yylval.nd_obj.name,(yytext)); return RBRACK; }
+"{"                     { strcpy(yylval.nd_obj.name,(yytext)); return LBRACE; }
+"}"                     { strcpy(yylval.nd_obj.name,(yytext)); return RBRACE; }
+"."                     { strcpy(yylval.nd_obj.name,(yytext)); return DOT; }
 
-"&"                     { return AND; }
-"|"                     { return OR; }
-"!"                     { return NOT; }
+"++"                    { strcpy(yylval.nd_obj.name,(yytext)); return INCREMENT; }
+"--"                    { strcpy(yylval.nd_obj.name,(yytext)); return DECREMENT; }
+"+"                     { strcpy(yylval.nd_obj.name,(yytext)); return PLUS; }
+"-"                     { strcpy(yylval.nd_obj.name,(yytext)); return MINUS; }
+"*"                     { strcpy(yylval.nd_obj.name,(yytext)); return MULT; }
+"/"                     { strcpy(yylval.nd_obj.name,(yytext)); return DIVIDE; }
+"%"                     { strcpy(yylval.nd_obj.name,(yytext)); return MODULE; }
+"+="                    { strcpy(yylval.nd_obj.name,(yytext)); return ADD_ASSIGN; }
+"-="                    { strcpy(yylval.nd_obj.name,(yytext)); return SUB_ASSIGN; }
+"*="                    { strcpy(yylval.nd_obj.name,(yytext)); return MULT_ASSIGN; }
+"/="                    { strcpy(yylval.nd_obj.name,(yytext)); return DIVIDE_ASSIGN; }
+"%="                    { strcpy(yylval.nd_obj.name,(yytext)); return MODULE_ASSIGN; }
+"="                     { strcpy(yylval.nd_obj.name,(yytext)); return ASSIGN; }
+
+"=="                    { strcpy(yylval.nd_obj.name,(yytext)); return EQ; }
+"!="                    { strcpy(yylval.nd_obj.name,(yytext)); return NEQ; }
+"<"                     { strcpy(yylval.nd_obj.name,(yytext)); return LT; }
+"<="                    { strcpy(yylval.nd_obj.name,(yytext)); return LE; }
+">"                     { strcpy(yylval.nd_obj.name,(yytext)); return GT; }
+">="                    { strcpy(yylval.nd_obj.name,(yytext)); return GE; }
+
+"&"                     { strcpy(yylval.nd_obj.name,(yytext)); return AND; }
+"|"                     { strcpy(yylval.nd_obj.name,(yytext)); return OR; }
+"!"                     { strcpy(yylval.nd_obj.name,(yytext)); return NOT; }
 
 
-[a-zA-Z][a-zA-Z0-9_]*   { yylval.sValue = strdup(yytext); return ID; }
+[a-zA-Z][a-zA-Z0-9_]*   { strcpy(yylval.nd_obj.name,(yytext)); return ID; }
 
-.                       {printf ("Invalid character.");}
+.                       { printf ("Invalid character."); }
 
 %%
 
 #ifndef yywrap
-   int yywrap (void) {return 1;}
+   int yywrap (void) { return 1; }
 #endif
