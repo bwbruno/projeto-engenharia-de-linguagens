@@ -1,12 +1,5 @@
-/*
-
-lex example4.l
-yacc example4.y -d -v -g  (-d: y.tab.h; -v: y.output; -g: y.dot [GraphViz])
-gcc lex.yy.c y.tab.c -o parser.exe 
-
-*/
-
 %{
+#include "stack.c"
 #include "symboltable.c"
 #include <stdio.h>
 #include <string.h>
@@ -15,22 +8,24 @@ gcc lex.yy.c y.tab.c -o parser.exe
 int yylex(void);
 void yyerror(char *s);
 extern int yylineno;
-extern char * yytext;
+extern char *yytext;
 extern FILE *yyin;
 extern FILE *yyout;
 
-struct node *head;
+char buffer[SIZE_TEXT];
+struct stack *scopes;
+struct node *parsetree;
 
 struct node { 
-struct node *left; 
-struct node *right; 
-char *token; 
+    struct node *left; 
+    struct node *right; 
+    char *token; 
 };
 
-void printtree(struct node*);
-void printInorder(struct node *);
-void printPreorder(struct node *);
+void print_tree(struct node*);
+void print_preorder(struct node *);
 struct node* mknode(struct node *left, struct node *right, char *token);
+char *insert_key(char *id);
 
 %}
 
@@ -51,7 +46,7 @@ struct node* mknode(struct node *left, struct node *right, char *token);
 %token <sValue> STRING_LITERAL
 %token <iValue> INT_NUMBER
 %token <fValue> DOUBLE_NUMBER
-%token <symbol> ID
+%token <sValue> ID
 
 %token INT FLOAT DOUBLE STRING BOOL ENUM POINTER POINT_TO
 %token <nd_obj> MAIN PROCEDURE FUNCTION RETURN
@@ -63,7 +58,7 @@ struct node* mknode(struct node *left, struct node *right, char *token);
 %left PLUS MINUS
 %left MULT DIVIDE MODULE
 
-%type <symbol> ids procedure function
+%type <nd_obj> ids procedure function
 %type <nd_obj> prog decls_opt subprogrs decls decl type dimen_op_opt decl_init_list pointer_decl dimen_ops dimen_op num_expr pointer_type pointer_method assign_op expr_list expr subprog args_op stmt_list args arg stmt while_stmt if_stmt assign_stmt for_stmt switch_stmt inc_dec print_stmt scan_stmt return_stmt func_call func_args dimen_ind_op ind_op condition else_stmt_opt for_args comp_op switch_cases case logic_op c_term comp comp_term 
 
 %start prog
@@ -71,59 +66,124 @@ struct node* mknode(struct node *left, struct node *right, char *token);
 //%type <sValue> stm
 
 %%
-prog : decls_opt subprogrs  {} 
-     ;
+prog : { push(scopes, "#global"); } decls_opt subprogrs  
+       {
+         $$.nd = mknode($2.nd, $3.nd, "prog");
+         parsetree = $$.nd;
+         //pop(scopes);
+       }
+       ;
 
-decls_opt : decls  {}
-          |        {}
-          ;
+decls_opt : decls  
+            {
+                $$.nd = mknode($1.nd, NULL, "decls_opt");
+            }
+            | { $$.nd = NULL; }
+            ;
           
-decls : decls decl  {}
-      | decl        {}
-      ;
+decls : decls decl
+        {
+          $$.nd = mknode($1.nd, $2.nd, "decls");
+        }
+        |  decl
+        {
+          $$.nd = mknode($1.nd, NULL, "decl");
+        }
+        ;
 
-decl : type dimen_op_opt  ids SEMI_COLON   {}
-     | decl_init_list                      {}
-     | pointer_decl                        {}
-     ;
+decl : type dimen_op_opt ids SEMI_COLON
+       { 
+         struct node *temp = mknode($1.nd, $2.nd, "type");
+         $$.nd = mknode(temp, $3.nd, "ids");
+       }
+       | decl_init_list
+       {
+         $$.nd = mknode($1.nd, NULL, "decl");
+       }
+       | pointer_decl
+       {
+         $$.nd = mknode($1.nd, NULL, "decl");
+       }
+       ;
 
-decl_init_list : type LBRACK RBRACK ids {} SEMI_COLON {}
+decl_init_list : type LBRACK RBRACK ids SEMI_COLON
+                 {
+                   struct node *temp = mknode($1.nd, NULL, "ids");
+                   $$.nd = mknode(temp, NULL, "decl_init_list");
+                 }
+                 ;
+
+dimen_op_opt : dimen_ops
+               {
+                 $$.nd = mknode($1.nd, NULL, "decl_op_opt");
+               }
+               | { $$.nd = NULL; }
                ;
 
-dimen_op_opt : dimen_ops {}
-             |           {}
-             ;
+dimen_ops : dimen_ops dimen_op
+            {
+              $$.nd = mknode($1.nd, $2.nd, "decl_ops");
+            }
+            | dimen_op
+            {
+              $$.nd = mknode($1.nd, NULL, "decl_op");
+            }
+            ;
 
-dimen_ops : dimen_ops dimen_op {}
-          | dimen_op {}
-          ;
+dimen_op : LBRACK num_expr RBRACK
+           {
+             $$.nd = mknode($2.nd, NULL, "decl_op");
+           }
+           ; 
 
-dimen_op : LBRACK num_expr RBRACK               {}
-         ; 
-
-pointer_decl : POINTER LT pointer_type GT ids SEMI_COLON {}
-             ;
+pointer_decl : POINTER LT pointer_type GT ids SEMI_COLON
+               {
+                 struct node *temp = mknode($3.nd, NULL, "ids");
+                 $$.nd = mknode(temp, NULL, "pointer_decl");
+               }
+               ;
                          
 pointer_type : type 
-             | POINTER LT pointer_type GT {}
-             ;
+               {
+                 $$.nd = mknode($1.nd, NULL, "type");
+               }
+               | POINTER LT pointer_type GT
+               {
+                 $$.nd = mknode($3.nd, NULL, "pointer_type");
+               }
+               ;
 
-pointer_method: ID DOT POINT_TO LPAREN ID RPAREN SEMI_COLON {}
-              ;
+pointer_method : ID DOT POINT_TO LPAREN ID RPAREN SEMI_COLON {}
+               ;
 
-ids : ID assign_op LBRACE expr_list RBRACE  {}
-    | ids COMMA ID assign_op expr           {}
-    | ID assign_op expr                     {}
-    | ids COMMA ID                          {}
-    | ID                                    {}
-    ;
+ids : ID assign_op LBRACE expr_list RBRACE
+      {
+          printf("ids: %s at line %d\n", insert_key($1), yylineno);
+      }
+      | ids COMMA ID assign_op expr
+      {
+          printf("ids: %s at line %d\n", $3, yylineno);
+      }
+      | ID assign_op expr
+      {
+          printf("ids: %s at line %d\n", insert_key($1), yylineno);
+      }
+      | ids COMMA ID
+      {
+          printf("ids: %s at line %d\n", $3, yylineno);
+      }
+      | ID
+      {
+          printf("ids: %s at line %d\n", insert_key($1), yylineno);
+      }
+      ;
 
 expr_list : expr_list COMMA expr {}
           | expr                 {}
           ;
 
-subprogrs : subprogrs { begin_scope(); } subprog  { end_scope(); }
-          | { begin_scope(); } subprog { end_scope(); }
+subprogrs : subprogrs subprog  
+          | subprog 
           ;
 
 subprog : procedure {}
@@ -145,8 +205,8 @@ args : args COMMA arg {}
      | arg {}
      ;
 
-arg : type dimen_op ID  {}
-    | pointer_type ID   {}
+arg : type  dimen_op ID 
+    | pointer_type  ID  
     ;
 
 type : INT     {}
@@ -157,13 +217,12 @@ type : INT     {}
      ;
 
 stmt_list : stmt_list stmt 
-          | stmt 
+          | stmt
           ;
 
 stmt : while_stmt                            {}
+     | assign_stmt SEMI_COLON                {}
      | if_stmt                               {}
-     | assign_stmt SEMI_COLON                {} 
-     | decl                                  {} 
      | for_stmt                              {}
      | switch_stmt                           {}
      | inc_dec SEMI_COLON                    {}
@@ -172,6 +231,7 @@ stmt : while_stmt                            {}
      | return_stmt                           {}
      | func_call SEMI_COLON                  {}
      | pointer_method                        {}
+     | decl                                  {}
      ;
 
 func_call : ID LPAREN func_args RPAREN  {} 
@@ -228,22 +288,22 @@ num_expr : ID                         {}
          | num_expr MODULE num_expr   {}
          ; 
 
-while_stmt : WHILE LPAREN condition RPAREN { begin_scope(); } LBRACE stmt_list RBRACE               { end_scope(); }
-           | DO { begin_scope(); } LBRACE stmt_list RBRACE WHILE LPAREN condition RPAREN SEMI_COLON { end_scope(); }
+while_stmt : WHILE LPAREN condition RPAREN  LBRACE stmt_list RBRACE               {}
+           | DO  LBRACE stmt_list RBRACE WHILE LPAREN condition RPAREN SEMI_COLON {}
            ;
 
-if_stmt : IF LPAREN condition RPAREN { begin_scope(); } LBRACE stmt_list RBRACE { scope--; } else_stmt_opt {}
+if_stmt : IF LPAREN condition RPAREN  LBRACE stmt_list RBRACE else_stmt_opt {}
         ;
 
-else_stmt_opt : ELSE { scope += 2; } LBRACE stmt_list RBRACE { end_scope(); }
-              |                              {}
+else_stmt_opt : ELSE  LBRACE stmt_list RBRACE {}
+              | {} 
               ;
           
-for_stmt : FOR { begin_scope(); } LPAREN for_args RPAREN LBRACE stmt_list RBRACE  { end_scope(); } 
+for_stmt : FOR  LPAREN for_args RPAREN LBRACE stmt_list RBRACE   {}
          ;
 
 for_args : assign_stmt SEMI_COLON ID comp_op ID SEMI_COLON inc_dec  {}
-         | decls ID comp_op ID SEMI_COLON inc_dec        {}
+         | decls ID comp_op ID SEMI_COLON inc_dec                   {}
          ;
 
 inc_dec : ID INCREMENT {}
@@ -276,7 +336,7 @@ condition : condition logic_op c_term {}
           | c_term                    {}
           ;
 
-c_term : ID    {}
+c_term : ID    { printf("c_term:? %s\n", yytext); }
        | TRUE  {}
        | FALSE {}
        | comp  {}
@@ -304,66 +364,61 @@ logic_op : AND {}
 %%
 
 int main (int argc, char *argv[]) {
+    scopes = malloc_stack();
     malloc_hashtable();
 
     yyparse();
 
     if (strcmp("--dump-symboltable", argv[1]) == 0 && (argc > 2)) {
-       	yyout = fopen(argv[2], "w");
+        char *filename = argv[2];
+        yyout = fopen(filename, "w");
         dump_symboltable(yyout);
         fclose(yyout);
     }
+
+    print_tree(parsetree);
+    print_stack(scopes);
     
     return 0;
 }
 
-struct node* mknode(struct node *left, struct node *right, char *token) {	
-	struct node *newnode = (struct node *)malloc(sizeof(struct node));
-	char *newstr = (char *)malloc(strlen(token)+1);
-	strcpy(newstr, token);
-	newnode->left = left;
-	newnode->right = right;
-	newnode->token = newstr;
-	return(newnode);
+struct node* mknode(struct node *left, struct node *right, char *token) {   
+    struct node *newnode = (struct node *)malloc(sizeof(struct node));
+    char *newstr = (char *)malloc(strlen(token)+1);
+    strcpy(newstr, token);
+    newnode->left = left;
+    newnode->right = right;
+    newnode->token = newstr;
+    return(newnode);
 }
 
-void printtree(struct node* tree) {
-	printf("\n\n Printing Parse Tree: \n\n");
-	printPreorder(tree);
-	printf("\n\n");
+void print_tree(struct node* tree) {
+    printf("\n\nPrinting Parse Tree:\n");
+    print_preorder(tree);
+    printf("\nCopie e cole o resultado no site: http://mshang.ca/syntree/\n\n");
 }
 
-void printInorder(struct node *tree) {
-	
-	if (tree == NULL)
-        return;
-
-	if (tree->left) {
-		printInorder(tree->left);
-	}
-
-	printf("%s, ", tree->token);
-
-	if (tree->right) {
-		printInorder(tree->right);
-	}
-}
-
-void printPreorder(struct node *tree)
+void print_preorder(struct node *tree)
 {
     printf("[");
 
-	printf("%s ", tree->token);
+    printf("%s ", tree->token);
 
-	if (tree->left){
-		printPreorder(tree->left);
-	}
+    if (tree->left){
+        print_preorder(tree->left);
+    }
 
-	if (tree->right){
-		printPreorder(tree->right);
-	}
+    if (tree->right){
+        print_preorder(tree->right);
+    }
 
-	printf("]");
+    printf("]");
+}
+
+char *insert_key(char *id) {
+  sprintf(buffer, "%s@%s", top(scopes), id);
+  insert(buffer, "", "", yylineno);
+  return buffer;
 }
 
 void yyerror (char *msg) {

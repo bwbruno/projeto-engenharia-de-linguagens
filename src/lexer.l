@@ -11,6 +11,7 @@
 %{
 #include <stdio.h>  
 #include <string.h>
+#include "stack.h"
 #include "symboltable.h"
 #include "parser.tab.h"
 int line = 0;
@@ -21,8 +22,7 @@ int line = 0;
 
 %%
 
-[ \t]                   ;
-[\n]                    { line++; }
+[ \t\n]                 ;
 [0-9]+                  {
                            yylval.iValue = atoi(yytext);
                            return INT_NUMBER;
@@ -41,30 +41,26 @@ int line = 0;
 "enum"                  { return ENUM; }
 "pointer"               { return POINTER; }
 "pointTo"               { return POINT_TO; }
-"main"                  {
-                           insert(yytext, "", "", yylineno);
-                           yylval.symbol = lookup(yytext);
-                           return MAIN;
-                        }
-"procedure"             { return PROCEDURE; }
-"function"              { return FUNCTION; }
-"return"                { return RETURN; }
-"while"                 { return WHILE; }
-"do"                    { return DO; }
-"if"                    { return IF; }
-"else"                  { return ELSE; }
-"for"                   { return FOR; }
-"switch"                { return SWITCH; }
-"case"                  { return CASE; }
-"break"                 { return BREAK; }
-"default"               { return DEFAULT; }
-"print"                 { return PRINT; }
-"scan"                  { return SCAN; }
+"main"                  { strcpy(yylval.nd_obj.name,(yytext)); return MAIN; }
+"procedure"             { strcpy(yylval.nd_obj.name,(yytext)); return PROCEDURE; }
+"function"              { strcpy(yylval.nd_obj.name,(yytext)); return FUNCTION; }
+"return"                { strcpy(yylval.nd_obj.name,(yytext)); return RETURN; }
+"while"                 { strcpy(yylval.nd_obj.name,(yytext)); return WHILE; }
+"do"                    { strcpy(yylval.nd_obj.name,(yytext)); return DO; }
+"if"                    { strcpy(yylval.nd_obj.name,(yytext)); return IF; }
+"else"                  { strcpy(yylval.nd_obj.name,(yytext)); return ELSE; }
+"for"                   { strcpy(yylval.nd_obj.name,(yytext)); return FOR; }
+"switch"                { strcpy(yylval.nd_obj.name,(yytext)); return SWITCH; }
+"case"                  { strcpy(yylval.nd_obj.name,(yytext)); return CASE; }
+"break"                 { strcpy(yylval.nd_obj.name,(yytext)); return BREAK; }
+"default"               { strcpy(yylval.nd_obj.name,(yytext)); return DEFAULT; }
+"print"                 { strcpy(yylval.nd_obj.name,(yytext)); return PRINT; }
+"scan"                  { strcpy(yylval.nd_obj.name,(yytext)); return SCAN; }
 ([\"].*?[\"])           { 
                            yylval.sValue = strdup(yytext);
                            return STRING_LITERAL;
                         }   
-"printArray"            { return PRINT_ARRAY; }
+"printArray"            { strcpy(yylval.nd_obj.name,(yytext)); return PRINT_ARRAY; }
 "true"                  { return TRUE; }
 "false"                 { return FALSE; }
 ","                     { return COMMA; }
@@ -104,11 +100,7 @@ int line = 0;
 "!"                     { return NOT; }
 
 
-[a-zA-Z][a-zA-Z0-9_]*   {
-                           insert(yytext, "", "", yylineno);
-                           yylval.symbol = lookup(yytext);
-                           return ID;
-                        }
+[a-zA-Z][a-zA-Z0-9_]*   { yylval.sValue = strdup(yytext); return ID; }
 
 .                       {printf ("Invalid character.");}
 

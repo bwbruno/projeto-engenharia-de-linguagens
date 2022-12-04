@@ -6,7 +6,7 @@ build:
 	gcc parser.tab.c lex.yy.c -o $(TARGET_EXEC) 
 
 clean:
-	rm *.tab.* *.yy.c *.out
+	rm *.tab.* *.yy.c *.out *.exe *.dot
 
 exec:
 	./$(TARGET_EXEC)

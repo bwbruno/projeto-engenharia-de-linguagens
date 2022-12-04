@@ -2,13 +2,16 @@ int a = 2;
 
 function main(int b, int c) : int {
     a = 0;
+    int z;
+
     if (a < 2) {
         int b = 1;
+        int d = 0;
+        int z = 1;
     }
-    else {
-        b = c;
-    }
-    d = 0; 
+
+    int o = 1; 
+    
 }
 
 function merge() : float {
