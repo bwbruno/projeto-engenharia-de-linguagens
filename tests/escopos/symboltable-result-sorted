@@ -1,9 +1,11 @@
 
 ---------- -------- --------- -----------------
-#global@a                     1 
-main@a                        20 
-main@b                        8 
-main@d                        9 
-main@o                        15 
-main@z                        5 
+0@c                           3 
+0@x                           1 
+0@y                           2 
+1@c                           9 
+1@x                           7 
+1@y                           8 
+2@teste                       18 
+3@oi                          22 
 Scope@Id   Datatype  Type      Line Numbers

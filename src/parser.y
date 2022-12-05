@@ -15,6 +15,8 @@ extern FILE *yyout;
 char buffer[SIZE_TEXT];
 struct stack *scopes;
 struct node *parsetree;
+int idScope = 1;
+char auxScope[10];
 
 struct node { 
     struct node *left; 
@@ -69,7 +71,7 @@ char *insert_key(char *id);
 //%type <sValue> stm
 
 %%
-prog : { push(scopes, "#global"); } decls_opt subprogrs  
+prog : { push(scopes, "0"); } decls_opt subprogrs  
        {
          $$.nd = mknode($2.nd, $3.nd, "prog");
          parsetree = $$.nd;
@@ -216,21 +218,21 @@ subprog : procedure
           }
           ;
 
-procedure : PROCEDURE ID LPAREN args_op RPAREN LBRACE stmt_list RBRACE
+procedure : PROCEDURE ID LPAREN args_op RPAREN LBRACE {sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++;} stmt_list RBRACE {pop(scopes);}
             {
-                $$.nd = mknode($4.nd, $7.nd, $2.name);
+                $$.nd = mknode($4.nd, $8.nd, $2.name);
             }
             ;
 
-function : FUNCTION ID LPAREN args_op RPAREN COLON type LBRACE stmt_list RBRACE
+function : FUNCTION ID LPAREN args_op RPAREN COLON type LBRACE {sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++;} stmt_list RBRACE {pop(scopes);}
            {
-               struct node *temp = mknode($4.nd, $9.nd, $2.name);
+               struct node *temp = mknode($4.nd, $10.nd, $2.name);
                $$.nd = mknode($7.nd, temp, "type");
            }
-           | FUNCTION MAIN { push(scopes, $2.name); } LPAREN args_op RPAREN COLON type LBRACE stmt_list RBRACE
+           | FUNCTION MAIN LPAREN args_op RPAREN COLON type LBRACE {sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++;} stmt_list RBRACE {pop(scopes);}
            {
-               struct node *temp = mknode($5.nd, $10.nd, $2.name);
-               $$.nd = mknode($8.nd, temp, "type");
+               struct node *temp = mknode($4.nd, $10.nd, $2.name);
+               $$.nd = mknode($7.nd, temp, "type");
            }
            ;
 
@@ -467,33 +469,33 @@ num_expr : ID
            }
            ; 
 
-while_stmt : WHILE LPAREN condition RPAREN LBRACE stmt_list RBRACE
+while_stmt : WHILE LPAREN condition RPAREN {sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++;} stmt_list RBRACE {pop(scopes);}
              {
-                $$.nd = mknode($3.nd, $6.nd, $1.name);
+                $$.nd = mknode($3.nd, $7.nd, $1.name);
              }
-             | DO LBRACE stmt_list RBRACE WHILE LPAREN condition RPAREN SEMI_COLON
+             | DO LBRACE {sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++;} stmt_list RBRACE WHILE LPAREN condition RPAREN SEMI_COLON
              {
-                $$.nd = mknode($3.nd, $7.nd, "do-while");
+                $$.nd = mknode($4.nd, $8.nd, "do-while");
              }
              ;
 
-if_stmt : IF LPAREN condition RPAREN LBRACE stmt_list RBRACE else_stmt_opt
+if_stmt : IF LPAREN condition RPAREN LBRACE {sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++;} stmt_list RBRACE {pop(scopes);} else_stmt_opt
           {
-             struct node *temp = mknode($6.nd, $8.nd, "body");
+             struct node *temp = mknode($7.nd, $10.nd, "body");
              $$.nd = mknode($3.nd, temp, "if-else");
           }
         ;
 
-else_stmt_opt : ELSE LBRACE stmt_list RBRACE 
+else_stmt_opt : ELSE LBRACE {sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++;} stmt_list RBRACE {pop(scopes);} 
                 {
-                   $$.nd = mknode($3.nd, NULL, $1.name);
+                   $$.nd = mknode($4.nd, NULL, $1.name);
                 }
                 | { $$.nd = NULL; }
                 ;
           
-for_stmt : FOR LPAREN for_args RPAREN LBRACE stmt_list RBRACE
+for_stmt : FOR LPAREN {sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++;} for_args RPAREN LBRACE  stmt_list RBRACE {pop(scopes);}
            {
-              $$.nd = mknode($3.nd, $6.nd, $1.name);
+              $$.nd = mknode($4.nd, $7.nd, $1.name);
            }
          ;
 
@@ -519,9 +521,9 @@ scan_stmt : SCAN LPAREN ID dimen_ind_op RPAREN
             }
             ; 
 
-switch_stmt : SWITCH LPAREN expr RPAREN LBRACE switch_cases RBRACE
+switch_stmt : SWITCH LPAREN expr RPAREN LBRACE {sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++;} switch_cases RBRACE {pop(scopes);}
               {
-                 $$.nd = mknode($3.nd, $6.nd, $1.name);
+                 $$.nd = mknode($3.nd, $7.nd, $1.name);
               }
               ;
 

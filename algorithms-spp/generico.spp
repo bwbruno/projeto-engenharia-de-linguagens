@@ -15,6 +15,7 @@ function main() : int
     a[][3] = 5;
     
     do {
+        int teste;
         print(x);
         print("Hello World");
         if(a < b) {
