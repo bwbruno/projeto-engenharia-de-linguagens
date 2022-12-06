@@ -354,12 +354,15 @@ return_stmt : RETURN expr SEMI_COLON
 
 assign_stmt : ID dimen_ind_op assign_op expr
               {
-                 struct node *temp = mknode($2.nd, $4.nd, $1.name);
-                 $$.nd = mknode($3.nd, temp, "assign-op");
+                 //struct node *temp = mknode($2.nd, $4.nd, $1.name);
+                 struct node *aux = mknode(NULL,NULL,$1.name);
+                 $3.nd = mknode(aux, $4.nd, $3.name);
+                 $$.nd = mknode($3.nd, NULL, "assign-op");
+                 //$$.nd = mknode($3.nd, temp, "assign-op");
               }
               ;
 
-dimen_ind_op : LBRACK ind_op RBRACK dimen_ind_op 
+dimen_ind_op : LBRACK ind_op RBRACK dimen_ind_op
                {
                   $$.nd = mknode($2.nd, $4.nd, "dimen-ind-op");
                }
