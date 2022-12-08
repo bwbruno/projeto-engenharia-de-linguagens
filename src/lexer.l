@@ -23,7 +23,7 @@ int line = 0;
 %%
 
 [ \t\n]                 ;
-[0-9]+                  {printf("\n\nINT NUMBER\n\n");strcpy(yylval.nd_obj.name,(yytext)); return INT_NUMBER; }
+[0-9]+                  {strcpy(yylval.nd_obj.name,(yytext)); return INT_NUMBER; }
 
 ([0-9]+)(\.[0-9]+)?|\.?[0-9]+ {
                            strcpy(yylval.nd_obj.name,(yytext));
