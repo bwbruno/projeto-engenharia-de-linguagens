@@ -418,6 +418,7 @@ expr : ID dimen_ind_op
        }
        | expr PLUS expr     
        {
+          printf("\n\nexpr PLUS expr\n\n");
           $$.nd = mknode($1.nd, $3.nd, $2.name);
        }
        | expr MINUS expr    

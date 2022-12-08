@@ -6,6 +6,12 @@ function myFunc(double x, double y) : int {
     bool flag = true;
     int a;
 
+    int x = 2;
+    
+    if(1+1 == 2){
+        int x = 0;
+    }
+
     if(2 == 2){
         int x = 0;
     }
