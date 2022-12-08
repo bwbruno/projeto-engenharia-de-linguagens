@@ -99,7 +99,7 @@ decls : decls decl
 decl : type dimen_op_opt ids SEMI_COLON
        { 
          struct node *temp = mknode($1.nd, $2.nd, "type");
-         $$.nd = mknode(temp, $3.nd, "ids");
+	 $$.nd = mknode(temp, $3.nd, "ids");
        }
        | decl_init_list
        {
@@ -169,17 +169,21 @@ ids : ID assign_op LBRACE expr_list RBRACE
       | ids COMMA ID assign_op expr
       {
           printf("ids: %s at line %d\n", $3.name, yylineno);
-          $$.nd = mknode($4.nd, $5.nd, "ids");
+          struct node *tempEsq = mknode($1.nd,$5.nd,$4.name);
+	  struct node *temp = mknode(NULL,NULL,$3.name);
+	  struct node *tempDir = mknode(temp,$5.nd,$4.name);
+          $$.nd = mknode(tempEsq, tempDir, "ids");
       }
       | ID assign_op expr
       {
           printf("ids: %s at line %d\n", insert_key($1.name), yylineno);
-          $$.nd = mknode($2.nd, $3.nd, $1.name);
+          struct node *temp = mknode(NULL,NULL,$1.name);
+	  $$.nd = mknode(temp, $3.nd, $2.name);
       }
       | ids COMMA ID
       {
           printf("ids: %s at line %d\n", $3.name, yylineno);
-          $$.nd = mknode($1.nd, NULL, "ids");
+	  $$.nd = mknode($1.nd, NULL, "ids");
       }
       | ID
       {
