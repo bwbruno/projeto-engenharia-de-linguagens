@@ -1,9 +1,12 @@
 TARGET_EXEC := parser.exe
 
 build:
+	bison -d -v -g parser.y
 	flex lexer.l
-	bison parser.y -d -v -g
-	gcc lex.yy.c parser.tab.c -o $(TARGET_EXEC)
+	gcc parser.tab.c lex.yy.c -o $(TARGET_EXEC) -g
+
+clean:
+	rm *.tab.* *.yy.c *.out *.exe *.dot
 
 exec:
 	./$(TARGET_EXEC)
@@ -11,22 +14,26 @@ exec:
 test-all: test-generico test-problema1 test-problema2 test-problema3 test-mergeSort test-switchCase
 
 test-generico:
-	./$(TARGET_EXEC) < ../algorithms-sample/generico.txt
+	./$(TARGET_EXEC) < ../algorithms-spp/generico.spp
 
 test-mergeSort:
-	./$(TARGET_EXEC) < ../algorithms-sample/mergeSort.txt
+	./$(TARGET_EXEC) < ../algorithms-spp/mergeSort.spp
 
 test-problema1:
-	./$(TARGET_EXEC) < ../algorithms-sample/problema1.txt
+	./$(TARGET_EXEC) < ../algorithms-spp/problema1.spp
 
 test-problema2:
-	./$(TARGET_EXEC) < ../algorithms-sample/problema2.txt
+	./$(TARGET_EXEC) < ../algorithms-spp/problema2.spp
 
 test-problema3:
-	./$(TARGET_EXEC) < ../algorithms-sample/problema3.txt
+	./$(TARGET_EXEC) < ../algorithms-spp/problema3.spp
 
 test-switchCase:
-	./$(TARGET_EXEC) < ../algorithms-sample/switchCase.txt
+	./$(TARGET_EXEC) < ../algorithms-spp/switchCase.spp
 
 test-teste:
-	./$(TARGET_EXEC) < ../algorithms-sample/teste.txt
+	./$(TARGET_EXEC) < ../algorithms-spp/teste.spp
+
+test-escopos:
+	./$(TARGET_EXEC) --dump-symboltable ../tests/escopos/symboltable-result < ../algorithms-spp/escopos.spp
+	sort ../tests/escopos/symboltable-result > ../tests/escopos/symboltable-result-sorted

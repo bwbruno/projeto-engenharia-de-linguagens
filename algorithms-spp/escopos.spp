@@ -1,0 +1,22 @@
+int a = 2;
+
+function main(int b, int c) : int {
+    a = 0;
+    int z;
+
+    if (a < 2) {
+        int b = 1;
+        int d = 0;
+        int z = 1;
+    } else {
+        a = 1;
+    }
+
+    int o = 1; 
+    
+}
+
+function merge() : float {
+    int a = 1;
+    int b = 0;
+}
