@@ -1,9 +1,13 @@
 int a = 2;
 
+int x,b = 0;
+
+int y = (1+2) * 3;
+
 function main(int b, int c) : int {
     a = 0;
     int z;
-
+    a += 3;
     if (a < 2) {
         int b = 1;
         int d = 0;
