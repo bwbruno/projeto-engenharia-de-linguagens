@@ -171,10 +171,9 @@ ids : ID assign_op LBRACE expr_list RBRACE
       | ids COMMA ID assign_op expr
       {
           printf("ids: %s at line %d\n", $3.name, yylineno);
-          struct node *tempEsq = mknode($1.nd,$5.nd,$4.name);
-          struct node *temp = mknode(NULL,NULL,$3.name);
-          struct node *tempDir = mknode(temp,$5.nd,$4.name);
-          $$.nd = mknode(tempEsq, tempDir, "ids");
+          struct node *temp = mknode(NULL, NULL, $3.name);
+	       struct node *tempDir = mknode(temp, $5.nd, $4.name);
+          $$.nd = mknode($1.nd, tempDir, "ids");
       }
       | ID assign_op expr
       {
@@ -185,7 +184,8 @@ ids : ID assign_op LBRACE expr_list RBRACE
       | ids COMMA ID
       {
           printf("ids: %s at line %d\n", $3.name, yylineno);
-	       $$.nd = mknode($1.nd, NULL, "ids");
+          struct node *temp = mknode(NULL, NULL, $3.name);
+	       $$.nd = mknode($1.nd, temp, "comma");
       }
       | ID
       {
@@ -572,8 +572,7 @@ c_term : ID    { $$.nd = mknode(NULL, NULL, $1.name); }
        
 comp : comp_term comp_op comp_term
        {
-          struct node *temp = mknode($1.nd, $3.nd, "comp-op");
-          $$.nd = mknode($2.nd, temp, "comp");
+          $$.nd = mknode($1.nd, $3.nd, $2.name);
        }
        ;
 
