@@ -14,7 +14,10 @@
 #include "stack.h"
 #include "symboltable.h"
 #include "parser.tab.h"
-int line = 0;
+char *fileStack = NULL;
+char *fileSymbolTable = NULL;
+struct stack *scopes;
+int line = 1;
 
 %}
 
@@ -22,8 +25,13 @@ int line = 0;
 
 %%
 
-[ \t\n]                 ;
-[0-9]+                  {strcpy(yylval.nd_obj.name,(yytext)); return INT_NUMBER; }
+[ \t]                   ;
+[\n]                    {
+                           if(fileStack) {
+                              dump_stack(scopes, fileStack, line++);
+                           }
+                        }
+[0-9]+                  { strcpy(yylval.nd_obj.name,(yytext)); return INT_NUMBER; }
 
 ([0-9]+)(\.[0-9]+)?|\.?[0-9]+ {
                            strcpy(yylval.nd_obj.name,(yytext));

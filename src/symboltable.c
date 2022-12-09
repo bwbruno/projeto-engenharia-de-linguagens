@@ -40,7 +40,7 @@ void insert(char *text, char *datatype, char *type, int linenumber) {
         b->lineslist->next = NULL;
         b->next = table[index];
         table[index] = b; 
-        printf("Inserted %s for the first time with linenumber %d!\n", text, linenumber);
+        // printf("Inserted %s for the first time with linenumber %d!\n", text, linenumber);
     } 
     // else{
     //     fprintf(stderr, "A multiple declaration of variable %s at line %d\n", text, linenumber);
@@ -63,7 +63,37 @@ void insert_linenumber(char *text, char *datatype, char *type, int linenumber) {
     printf("Found %s again at line %d!\n", text, linenumber);
 }
 
-void dump_symboltable(FILE *file){  
+void print_symboltable(){  
+  printf("\n");
+  printf("Scope@Id   Datatype  Type      Line Numbers\n");
+  printf("---------- -------- --------- -----------------\n");
+
+  for (int i = 0; i < SIZE; ++i) { 
+    if (table[i] != NULL) { 
+        bucket *b = table[i];
+
+        while (b != NULL) {
+            linenumber_bucket *t = b->lineslist;
+            printf("%-10s ", b->text);
+            printf("%-8s ", b->datatype);
+            printf("%-9s ", b->type);
+
+            while (t != NULL){
+                printf("%d ",t->line);
+                t = t->next;
+            }
+
+            printf("\n");
+            b = b->next;
+        }
+    }
+  }
+
+  printf("\n");
+}
+
+void dump_symboltable(char *filename){  
+  FILE *file = fopen(filename, "w");
   fprintf(file, "\n");
   fprintf(file, "Scope@Id   Datatype  Type      Line Numbers\n");
   fprintf(file, "---------- -------- --------- -----------------\n");
@@ -89,5 +119,6 @@ void dump_symboltable(FILE *file){
     }
   }
 
-  printf("\n");
+  fprintf(file, "\n");
+  fclose(file);
 }

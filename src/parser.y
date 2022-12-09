@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <getopt.h>
 
 int yylex(void);
 void yyerror(char *s);
@@ -11,9 +12,11 @@ extern int yylineno;
 extern char *yytext;
 extern FILE *yyin;
 extern FILE *yyout;
+extern char *fileStack;
+extern char *fileSymbolTable;
+extern struct stack *scopes;
 
 char buffer[SIZE_TEXT];
-struct stack *scopes;
 struct node *parsetree;
 int idScope = 1;
 char auxScope[10];
@@ -38,7 +41,6 @@ struct node* mknode(struct node *left, struct node *right, char *token);
 char *insert_key(char *id);
 
 %}
-
 
 %union {
     union Value *value;
@@ -99,7 +101,7 @@ decls : decls decl
 decl : type dimen_op_opt ids SEMI_COLON
        { 
          struct node *temp = mknode($1.nd, $2.nd, "type");
-	 $$.nd = mknode(temp, $3.nd, "ids");
+         $$.nd = mknode(temp, $3.nd, "ids");
        }
        | decl_init_list
        {
@@ -170,20 +172,20 @@ ids : ID assign_op LBRACE expr_list RBRACE
       {
           printf("ids: %s at line %d\n", $3.name, yylineno);
           struct node *tempEsq = mknode($1.nd,$5.nd,$4.name);
-	  struct node *temp = mknode(NULL,NULL,$3.name);
-	  struct node *tempDir = mknode(temp,$5.nd,$4.name);
+          struct node *temp = mknode(NULL,NULL,$3.name);
+          struct node *tempDir = mknode(temp,$5.nd,$4.name);
           $$.nd = mknode(tempEsq, tempDir, "ids");
       }
       | ID assign_op expr
       {
           printf("ids: %s at line %d\n", insert_key($1.name), yylineno);
           struct node *temp = mknode(NULL,NULL,$1.name);
-	  $$.nd = mknode(temp, $3.nd, $2.name);
+	       $$.nd = mknode(temp, $3.nd, $2.name);
       }
       | ids COMMA ID
       {
           printf("ids: %s at line %d\n", $3.name, yylineno);
-	  $$.nd = mknode($1.nd, NULL, "ids");
+	       $$.nd = mknode($1.nd, NULL, "ids");
       }
       | ID
       {
@@ -244,8 +246,8 @@ args_op : args
           {
               $$.nd = mknode($1.nd, NULL, "args-op");
           }
-        | { $$.nd = NULL; }
-        ;
+          | { $$.nd = NULL; }
+          ;
 
 args : args COMMA arg
        {
@@ -276,7 +278,7 @@ type : INT     { $$.nd = mknode(NULL, NULL, $1.name); }
 
 stmt_list : stmt_list stmt 
             {
-                $$.nd = mknode($1.nd, $2.nd, "stmt_list");
+                $$.nd = mknode($1.nd, $2.nd, "stmt-list");
             }
             | stmt
             {
@@ -597,17 +599,68 @@ int main (int argc, char *argv[]) {
     scopes = malloc_stack();
     malloc_hashtable();
 
-    yyparse();
+    int hasInputOpt = 0;
+    while (1)
+    {
+        int c;
+        int option_index = 0;
+        static struct option long_options[] = {
+            {"input", required_argument, 0, 'i'},
+            {"output", required_argument, 0, 'o'},
+            {"dump-symboltable", required_argument, 0, 't'},
+            {"dump-stack", required_argument, 0, 's'},
+            {0, 0, 0, 0}
+        };
 
-    if ((argc > 2) && strcmp("--dump-symboltable", argv[1]) == 0) {
-        char *filename = argv[2];
-        yyout = fopen(filename, "w");
-        dump_symboltable(yyout);
-        fclose(yyout);
+        c = getopt_long(argc, argv, "t:s:o:i:", long_options, &option_index);
+        if (c == -1)
+            break;
+
+        switch (c) {
+            case 'i':
+                printf("option '%c' with value '%s'\n", c, optarg);
+                yyin = fopen(optarg, "r");
+                yyparse();
+                fclose(yyin);
+                hasInputOpt = 1;
+                break;
+
+            case 'o':
+                printf("option '%c' with value '%s'\n", c, optarg);
+                break;
+
+            case 't':
+                printf("option '%c' with value '%s'\n", c, optarg);
+                fileSymbolTable = optarg;
+                break;
+
+            case 's':
+                printf("option '%c' with value '%s'\n", c, optarg);
+                fileStack = optarg;
+                dump_stack_init(fileStack);
+                printf("dump-stack: %s", fileSymbolTable);
+                break;
+
+            case '?':
+                break;
+
+            default:
+                printf("?? getopt returned character code 0%o ??\n", c);
+            }
+    }
+
+    if(!hasInputOpt && optind < argc) {
+      yyin = fopen(argv[optind++], "r");
+      yyparse();
+      fclose(yyin);
+    }
+
+    if(fileSymbolTable) {
+      dump_symboltable(fileSymbolTable);
+      printf("dump-symboltable: %s", fileSymbolTable);
     }
 
     print_tree(parsetree);
-    print_stack(scopes);
     
     return 0;
 }
@@ -651,7 +704,7 @@ char *insert_key(char *id) {
   return buffer;
 }
 
-void yyerror (char *msg) {
+void yyerror(char *msg) {
     fprintf (stderr, "%d: %s at '%s'\n", yylineno, msg, yytext);
     exit(1);
 }
