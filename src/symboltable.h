@@ -21,5 +21,5 @@ unsigned int hash(char *s0);
 bucket *lookup(char *text);
 void insert(char *text, char *datatype, char *type, int linenumber);
 void insert_linenumber(char *text, char *datatype, char *type, int linenumber);
-void print_symboltable(); 
+void print_symboltable();
 void dump_symboltable(char *filename);

@@ -49,7 +49,7 @@ void print_help();
     struct var_name { 
         union Value *value;
         struct bucket *symbol;
-        char name[100]; 
+	char name[100]; 
         struct node* nd;
     } nd_obj; 
 };
@@ -104,7 +104,10 @@ decls : decls decl
 decl : type dimen_op_opt ids SEMI_COLON
        { 
          struct node *temp = mknode($1.nd, $2.nd, "type");
-         $$.nd = mknode(temp, $3.nd, "ids");
+         $3.symbol = malloc(sizeof(struct bucket));
+	 strcpy($3.symbol->type,$1.name);
+         //printf("Tipo de %s -> %s\n",$3.name, $3.symbol->type);
+	 $$.nd = mknode(temp, $3.nd, "ids");
        }
        | decl_init_list
        {
@@ -692,6 +695,10 @@ struct node* mknode(struct node *left, struct node *right, char *token) {
     newnode->right = right;
     newnode->token = newstr;
     return(newnode);
+}
+
+struct bucket* mkbucket(){
+
 }
 
 void print_tree(struct node* tree) {
