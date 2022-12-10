@@ -5,6 +5,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <getopt.h>
+#define END_BOLD "\x1B[0m"
+#define BEGIN_BOLD "\x1B[1m"  
 
 int yylex(void);
 void yyerror(char *s);
@@ -39,13 +41,14 @@ void print_tree(struct node*);
 void print_preorder(struct node *);
 struct node* mknode(struct node *left, struct node *right, char *token);
 char *insert_key(char *id);
+void print_help();
 
 %}
 
 %union {
-    union Value *value;
-    struct bucket *symbol;
     struct var_name { 
+        union Value *value;
+        struct bucket *symbol;
         char name[100]; 
         struct node* nd;
     } nd_obj; 
@@ -77,7 +80,7 @@ prog : { push(scopes, "0"); } decls_opt subprogrs
        {
          $$.nd = mknode($2.nd, $3.nd, "prog");
          parsetree = $$.nd;
-         //pop(scopes);
+         pop(scopes);
        }
        ;
 
@@ -173,7 +176,7 @@ ids : ID assign_op LBRACE expr_list RBRACE
           printf("ids: %s at line %d\n", $3.name, yylineno);
           struct node *temp = mknode(NULL, NULL, $3.name);
 	       struct node *tempDir = mknode(temp, $5.nd, $4.name);
-          $$.nd = mknode($1.nd, tempDir, "ids");
+          $$.nd = mknode($1.nd, tempDir, "comma");
       }
       | ID assign_op expr
       {
@@ -598,21 +601,22 @@ int main (int argc, char *argv[]) {
     scopes = malloc_stack();
     malloc_hashtable();
 
-    int hasInputOpt = 0;
+    int c, hasInputOpt = 0, printParseTree = 1;
     while (1)
     {
-        int c;
         int option_index = 0;
         static struct option long_options[] = {
             {"input", required_argument, 0, 'i'},
             {"output", required_argument, 0, 'o'},
             {"dump-symboltable", required_argument, 0, 't'},
             {"dump-stack", required_argument, 0, 's'},
+            {"print-parsetree", no_argument, 0, 'p'},
+            {"help", no_argument, 0, 'h'},
             {0, 0, 0, 0}
         };
 
-        c = getopt_long(argc, argv, "t:s:o:i:", long_options, &option_index);
-        if (c == -1)
+        c = getopt_long(argc, argv, "t:s:o:i:ph", long_options, &option_index);
+        if (c == -1) 
             break;
 
         switch (c) {
@@ -637,10 +641,19 @@ int main (int argc, char *argv[]) {
                 printf("option '%c' with value '%s'\n", c, optarg);
                 fileStack = optarg;
                 dump_stack_init(fileStack);
-                printf("dump-stack: %s", fileSymbolTable);
+                break;
+
+            case 'p':
+                printParseTree = 1;
+                break;
+
+            case 'h':
+                print_help(argv[0]);
                 break;
 
             case '?':
+                printf("Error! Try \"%s --help\" for more information.\n", argv[0]);
+                exit(0);
                 break;
 
             default:
@@ -652,15 +665,22 @@ int main (int argc, char *argv[]) {
       yyin = fopen(argv[optind++], "r");
       yyparse();
       fclose(yyin);
+      printf("Done\n");
+    }
+
+    if(!hasInputOpt && argc == 1) {
+         printf("%s: Fatal Error! No input files\n", argv[0]);
+         exit(0);
     }
 
     if(fileSymbolTable) {
       dump_symboltable(fileSymbolTable);
-      printf("dump-symboltable: %s", fileSymbolTable);
     }
 
-    print_tree(parsetree);
-    
+    if(printParseTree) {
+      print_tree(parsetree);
+    } 
+
     return 0;
 }
 
@@ -675,9 +695,9 @@ struct node* mknode(struct node *left, struct node *right, char *token) {
 }
 
 void print_tree(struct node* tree) {
-    printf("\n\nPrinting Parse Tree:\n");
+    printf("\nPrinting Preorder Parse Tree...\n");
     print_preorder(tree);
-    printf("\nCopie e cole o resultado no site: http://mshang.ca/syntree/\n\n");
+    printf("\n\nYou can see a visual representation of the parse tree. Copy and paste the result on the website: http://mshang.ca/syntree/\n");
 }
 
 void print_preorder(struct node *tree)
@@ -706,4 +726,24 @@ char *insert_key(char *id) {
 void yyerror(char *msg) {
     fprintf (stderr, "%d: %s at '%s'\n", yylineno, msg, yytext);
     exit(1);
+}
+
+void print_help(char *compilername) {
+   printf("\n%sUSAGE%s\n", BEGIN_BOLD, END_BOLD);
+   printf("\t%s%s%s INPUTFILE OUTPUTFILE [OPTION]...\n\n", BEGIN_BOLD, compilername, END_BOLD);
+   printf("%sOPTIONS%s\n", BEGIN_BOLD, END_BOLD);
+   printf("\tRequired arguments to long options are mandatory for short options too.\n\n");
+   printf("\t%s-i, --input=%sFILE\n", BEGIN_BOLD, END_BOLD);
+   printf("\t\tsimple++ source code that must be processed\n\n");
+   printf("\t%s-o, --output=%sFILE\n", BEGIN_BOLD, END_BOLD);
+   printf("\t\tfunctional program file in simplified c that will be generated\n\n");
+   printf("\t%s-t, --dump-symboltable=%sFILE\n", BEGIN_BOLD, END_BOLD);
+   printf("\t\tat the end of parsing, generates an log file which is a snapshot of the symbol table\n\n");
+   printf("\t%s-s, --dump-stack=%sFILE\n", BEGIN_BOLD, END_BOLD);
+   printf("\t\twhile parsing, generates and update an log file with the state of the scope stack for each line of parsed code\n\n");
+   printf("\t%s-p, --print-parsetree%s\n", BEGIN_BOLD, END_BOLD);
+   printf("\t\tdisplay the syntax tree of the analyzed code in preorder\n\n");
+   printf("\t%s-h, --help%s\n", BEGIN_BOLD, END_BOLD);
+   printf("\t\tdisplay this help and exit\n\n");
+   exit(1);
 }

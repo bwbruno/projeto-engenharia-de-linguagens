@@ -1,6 +1,6 @@
 int a = 2;
 
-int x,b = 0;
+int a,b,c,d=0;
 
 int y = (1+2) * 3;
 
@@ -15,7 +15,7 @@ function main(int b, int c) : int {
     } else {
         a = 1;
     }
-
+    print(a);
     int o = 1; 
     
 }

@@ -39,5 +39,5 @@ test-teste:
 	./$(TARGET_EXEC) ../algorithms-spp/teste.spp
 
 test-escopos:
-	./$(TARGET_EXEC) ../algorithms-spp/escopos.spp --dump-symboltable ../logs/escopos/escopos-symboltable.dump --dump-stack ../logs/escopos/escopos-stack.dump
+	./$(TARGET_EXEC) ../algorithms-spp/escopos.spp --dump-symboltable ../logs/escopos/escopos-symboltable.dump --dump-stack ../logs/escopos/escopos-stack.dump -p
 	sort ../logs/escopos/escopos-symboltable.dump > ../logs/escopos/escopos-symboltable.sorted.dump

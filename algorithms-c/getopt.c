@@ -20,8 +20,10 @@ int main(int argc, char **argv)
         };
 
         c = getopt_long(argc, argv, "t:s:o:i:", long_options, &option_index);
-        if (c == -1)
+        if (c == -1) {
+            printf("-1 error code %o ??\n", c);
             break;
+        }
 
         switch (c) {
             case 'i':
@@ -42,6 +44,7 @@ int main(int argc, char **argv)
                 break;
 
             case '?':
+                printf("error code %o ??\n", c);
                 break;
 
             default:
