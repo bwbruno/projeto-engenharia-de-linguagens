@@ -22,6 +22,8 @@ char buffer[SIZE_TEXT];
 struct node *parsetree;
 int idScope = 1;
 char auxScope[10];
+char auxType[40];
+int auxDimension=0;
 
 struct node { 
     struct node *left; 
@@ -104,10 +106,12 @@ decls : decls decl
 decl : type dimen_op_opt ids SEMI_COLON
        { 
          struct node *temp = mknode($1.nd, $2.nd, "type");
-         $3.symbol = malloc(sizeof(struct bucket));
+	 $3.symbol = malloc(sizeof(struct bucket));
 	 strcpy($3.symbol->type,$1.name);
-         //printf("Tipo de %s -> %s\n",$3.name, $3.symbol->type);
-	 $$.nd = mknode(temp, $3.nd, "ids");
+         strcat($3.symbol->type,auxType);
+         strcpy(auxType,"");
+         printf("Tipo de %s -> %s (auxType = ->%s<-)\n",$3.name, $3.symbol->type,auxType);
+         $$.nd = mknode(temp, $3.nd, "ids");
        }
        | decl_init_list
        {
@@ -145,6 +149,12 @@ dimen_ops : dimen_ops dimen_op
 
 dimen_op : LBRACK num_expr RBRACK
            {
+	     char temp[40] = "";
+             strcat(temp,$1.name);
+	     strcat(temp,$2.name);
+             strcat(temp,$3.name);
+             strcat(auxType,temp);
+             //printf("+1 DIMENSÃO\n");
              $$.nd = mknode($2.nd, NULL, "decl-op");
            }
            ; 
@@ -194,7 +204,7 @@ ids : ID assign_op LBRACE expr_list RBRACE
 	       $$.nd = mknode($1.nd, temp, "comma");
       }
       | ID
-      {
+      {   
           printf("ids: %s at line %d\n", insert_key($1.name), yylineno);
           $$.nd = mknode(NULL, NULL, $1.name);
       }
@@ -275,11 +285,11 @@ arg : type dimen_op ID
       }
       ;
 
-type : INT     { $$.nd = mknode(NULL, NULL, $1.name); }
-     | DOUBLE  { $$.nd = mknode(NULL, NULL, $1.name); }
-     | FLOAT   { $$.nd = mknode(NULL, NULL, $1.name); }
-     | STRING  { $$.nd = mknode(NULL, NULL, $1.name); }
-     | BOOL    { $$.nd = mknode(NULL, NULL, $1.name); }
+type : INT     { strcpy(auxType,$1.name); $$.nd = mknode(NULL, NULL, $1.name); }
+     | DOUBLE  { strcpy(auxType,$1.name); $$.nd = mknode(NULL, NULL, $1.name); }
+     | FLOAT   { strcpy(auxType,$1.name); $$.nd = mknode(NULL, NULL, $1.name); }
+     | STRING  { strcpy(auxType,$1.name); $$.nd = mknode(NULL, NULL, $1.name); }
+     | BOOL    { strcpy(auxType,$1.name); $$.nd = mknode(NULL, NULL, $1.name); }
      ;
 
 stmt_list : stmt_list stmt 
@@ -726,7 +736,7 @@ void print_preorder(struct node *tree)
 
 char *insert_key(char *id) {
   sprintf(buffer, "%s@%s", top(scopes), id);
-  insert(buffer, "", "", yylineno);
+  insert(buffer,"",auxType,yylineno);
   return buffer;
 }
 
