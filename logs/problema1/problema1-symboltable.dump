@@ -1,8 +1,8 @@
 
-Scope@Id   Datatype  Type      Line Numbers
----------- -------- --------- -----------------
-0@main                        1 
-1@c                           5 
-1@x                           3 
-1@y                           4 
+Scope@Id                  Datatype        Type           Line Numbers
+------------------------- --------------- -------------- -----------------
+0@main                    int             function       1 
+1@c                       int             variable       5 
+1@x                       float           variable       3 
+1@y                       float           variable       4 
 

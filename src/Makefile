@@ -5,15 +5,17 @@
 COMPILER=parser.exe
 
 DIR_SOURCE=../algorithms-spp
+DIR_BROKEN_SOURCE=../algorithms-spp/errors
 DIR_LOGS=../logs
 DIR_TESTS=../tests
 FILE_STACK=$(DIR_LOGS)/$(@:test-%=%)/$(@:test-%=%)-stack.dump
 FILE_SYMBOLTABLE=$(DIR_LOGS)/$(@:test-%=%)/$(@:test-%=%)-symboltable.dump
 
-#OPTIONS=
-OPTIONS=--dump-stack=$(FILE_STACK) -t $(FILE_SYMBOLTABLE) -p
+#OPTIONS=-p
+OPTIONS=--dump-stack=$(FILE_STACK) -t $(FILE_SYMBOLTABLE)
 
 ALGORITHMS=test-generico test-problema1 test-problema2 test-problema3 test-mergeSort test-switchCase test-escopos
+BROKEN_ALGORITHMS=test-broken-multipleDeclarations test-broken-undeclared test-broken-typeErrorOnExpression
 
 build:
 	bison -d -v -g parser.y
@@ -32,5 +34,16 @@ setup-log-and-test-folders:
 
 test-all: $(ALGORITHMS)
 
+test-broken-all: $(BROKEN_ALGORITHMS)
+
+RESET=\x1B[0m
+BOLD=\x1B[1m
+CYAN=\x1B[36m
+
 $(ALGORITHMS):
+	@echo -e '$(CYAN)$(BOLD)$@$(RESET)'
 	./$(COMPILER) $(OPTIONS) $(DIR_SOURCE)/$(@:test-%=%).spp
+
+$(BROKEN_ALGORITHMS):
+	@echo -e '$(CYAN)$(BOLD)$@$(RESET)'
+	./$(COMPILER) $(DIR_BROKEN_SOURCE)/$(@:test-broken-%=%).spp
