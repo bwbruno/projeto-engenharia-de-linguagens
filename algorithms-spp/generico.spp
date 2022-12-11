@@ -1,16 +1,17 @@
 double[1][1] x = 10.5;
 double[1] y = 25.5;
 int c;
+int b;
 
-function main() : int
+function main(int i) : int
 {
     double x = 10.5;
     double y = 25.5;
     int c = 20;
-    int c;
     
-    a = 5;
+    int a = 5;
     a[i] = 5;
+    int teste = 3;
     a[teste][] = 5;
     a[][3] = 5;
     

@@ -69,7 +69,7 @@ void print_stack(struct stack *s)
 
 void dump_stack_init(char *filename)
 {
-    printf("Generating '%s' stack log... ", filename);
+    printf("Initializing '%s' stack log...\n", filename);
     FILE *file = fopen(filename, "w");
     fprintf(file, "Line: Stack\n");
     fprintf(file, "--------------------\n");

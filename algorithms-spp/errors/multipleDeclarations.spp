@@ -1,0 +1,9 @@
+int a;
+int b;
+
+function main() : int
+{
+    a = 2;
+    int b = 1;
+    int b = 2;    
+}

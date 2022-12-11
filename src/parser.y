@@ -5,8 +5,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <getopt.h>
-#define END_BOLD "\x1B[0m"
-#define BEGIN_BOLD "\x1B[1m"  
+#define RESET "\x1B[0m"
+#define BOLD "\x1B[1m"  
+#define RED "\x1B[31m"  
 
 int yylex(void);
 void yyerror(char *s);
@@ -40,6 +41,8 @@ typedef union Value{
 void print_tree(struct node*);
 void print_preorder(struct node *);
 struct node* mknode(struct node *left, struct node *right, char *token);
+bucket *check_undeclared(char *id);
+void check_declaration(char *id);
 char *insert_key(char *id);
 void print_help();
 
@@ -88,7 +91,7 @@ decls_opt : decls
             {
                 $$.nd = mknode($1.nd, NULL, "decls-opt");
             }
-            | { printf("decls_opt:: \n"); $$.nd = NULL; }
+            | { $$.nd = NULL; }
             ;
           
 decls : decls decl
@@ -168,31 +171,31 @@ pointer_method : ID DOT POINT_TO LPAREN ID RPAREN SEMI_COLON {}
 
 ids : ID assign_op LBRACE expr_list RBRACE
       {
-          printf("ids: %s at line %d\n", insert_key($1.name), yylineno);
+          insert_key($1.name);
           $$.nd = mknode($2.nd, $4.nd, $1.name);
       }
       | ids COMMA ID assign_op expr
       {
-          printf("ids: %s at line %d\n", $3.name, yylineno);
+          insert_key($3.name);
           struct node *temp = mknode(NULL, NULL, $3.name);
-	       struct node *tempDir = mknode(temp, $5.nd, $4.name);
+	      struct node *tempDir = mknode(temp, $5.nd, $4.name);
           $$.nd = mknode($1.nd, tempDir, "comma");
       }
       | ID assign_op expr
       {
-          printf("ids: %s at line %d\n", insert_key($1.name), yylineno);
-          struct node *temp = mknode(NULL,NULL,$1.name);
-	       $$.nd = mknode(temp, $3.nd, $2.name);
+          insert_key($1.name);
+          struct node *temp = mknode(NULL, NULL, $1.name);
+	      $$.nd = mknode(temp, $3.nd, $2.name);
       }
       | ids COMMA ID
       {
-          printf("ids: %s at line %d\n", $3.name, yylineno);
+          insert_key($3.name);
           struct node *temp = mknode(NULL, NULL, $3.name);
-	       $$.nd = mknode($1.nd, temp, "comma");
+	      $$.nd = mknode($1.nd, temp, "comma");
       }
       | ID
       {
-          printf("ids: %s at line %d\n", insert_key($1.name), yylineno);
+          insert_key($1.name);
           $$.nd = mknode(NULL, NULL, $1.name);
       }
       ;
@@ -227,21 +230,24 @@ subprog : procedure
           }
           ;
 
-procedure : PROCEDURE ID LPAREN args_op RPAREN LBRACE {sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++;} stmt_list RBRACE {pop(scopes);}
+procedure : PROCEDURE ID { insert_key($2.name); sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++; } LPAREN args_op RPAREN LBRACE stmt_list RBRACE
             {
+                pop(scopes);
                 $$.nd = mknode($4.nd, $8.nd, $2.name);
             }
             ;
 
-function : FUNCTION ID LPAREN args_op RPAREN COLON type LBRACE {sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++;} stmt_list RBRACE {pop(scopes);}
+function : FUNCTION ID { insert_key($2.name); sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++; } LPAREN args_op RPAREN COLON type LBRACE  stmt_list RBRACE
            {
-               struct node *temp = mknode($4.nd, $10.nd, $2.name);
-               $$.nd = mknode($7.nd, temp, "type");
+               pop(scopes);
+               struct node *temp = mknode($5.nd, $11.nd, $2.name);
+               $$.nd = mknode($8.nd, temp, "type");
            }
-           | FUNCTION MAIN LPAREN args_op RPAREN COLON type LBRACE {sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++;} stmt_list RBRACE {pop(scopes);}
+           | FUNCTION MAIN { insert_key($2.name); sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++; } LPAREN args_op RPAREN COLON type LBRACE stmt_list RBRACE
            {
-               struct node *temp = mknode($4.nd, $10.nd, $2.name);
-               $$.nd = mknode($7.nd, temp, "type");
+               pop(scopes);
+               struct node *temp = mknode($5.nd, $10.nd, $2.name);
+               $$.nd = mknode($8.nd, temp, "type");
            }
            ;
 
@@ -264,10 +270,14 @@ args : args COMMA arg
 
 arg : type dimen_op ID 
       {
+          printf("%sBug?? Arg Type idScope::%s %d\n", RED, RESET, idScope);
+          insert_key($3.name);
           $$.nd = mknode($1.nd, $2.nd, $3.name);
       }
       | pointer_type ID  
       {
+          printf("%sBug?? Arg Point idScope::%s %d\n", RED, RESET, idScope);
+          insert_key($2.name);
           $$.nd = mknode($1.nd, NULL, $2.name);
       }
       ;
@@ -341,6 +351,7 @@ stmt : while_stmt
 
 func_call : ID LPAREN func_args RPAREN 
             {
+               check_undeclared($1.name);
                $$.nd = mknode($3.nd, NULL, "func-call");
             }
             ;
@@ -363,6 +374,7 @@ return_stmt : RETURN expr SEMI_COLON
 
 assign_stmt : ID dimen_ind_op assign_op expr
               {
+                 check_undeclared($1.name);
                  //struct node *temp = mknode($2.nd, $4.nd, $1.name);
                  struct node *aux = mknode(NULL,NULL,$1.name);
                  $3.nd = mknode(aux, $4.nd, $3.name);
@@ -395,6 +407,7 @@ assign_op : ASSIGN        { $$.nd = mknode(NULL, NULL, $1.name); }
 
 expr : ID dimen_ind_op    
        {
+          check_undeclared($1.name);
           $$.nd = mknode($2.nd, NULL, $1.name);
        }
        | INT_NUMBER         
@@ -448,7 +461,8 @@ expr : ID dimen_ind_op
        ;
 
 num_expr : ID
-           {
+           { 
+              check_undeclared($1.name);
               $$.nd = mknode(NULL, NULL, $1.name);
            }
            | INT_NUMBER
@@ -481,7 +495,7 @@ num_expr : ID
            }
            ; 
 
-while_stmt : WHILE LPAREN condition RPAREN {sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++;} stmt_list RBRACE {pop(scopes);}
+while_stmt : WHILE LPAREN condition RPAREN {sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++;} LBRACE stmt_list RBRACE {pop(scopes);}
              {
                 $$.nd = mknode($3.nd, $7.nd, $1.name);
              }
@@ -511,14 +525,22 @@ for_stmt : FOR LPAREN {sprintf(auxScope,"%d",idScope); push(scopes, auxScope); i
            }
          ;
 
-for_args : assign_stmt SEMI_COLON ID comp_op ID SEMI_COLON inc_dec  {}
-         | decls ID comp_op ID SEMI_COLON inc_dec                   {}
+for_args : assign_stmt SEMI_COLON ID comp_op ID SEMI_COLON inc_dec
+         {
+            check_undeclared($3.name); 
+            check_undeclared($5.name); 
+         }
+         | decls ID comp_op ID SEMI_COLON inc_dec
+         {
+            check_undeclared($2.name); 
+            check_undeclared($4.name); 
+         }
          ;
 
-inc_dec : ID INCREMENT {}
-        | ID DECREMENT {}
-        | INCREMENT ID {}
-        | DECREMENT ID {}
+inc_dec : ID INCREMENT { check_undeclared($1.name); }
+        | ID DECREMENT { check_undeclared($1.name); }
+        | INCREMENT ID { check_undeclared($2.name); }
+        | DECREMENT ID { check_undeclared($2.name); }
         ;
 
 print_stmt : PRINT LPAREN expr RPAREN
@@ -601,7 +623,7 @@ int main (int argc, char *argv[]) {
     scopes = malloc_stack();
     malloc_hashtable();
 
-    int c, hasInputOpt = 0, printParseTree = 1;
+    int c, hasInputOpt = 0, printParseTree = 0;
     while (1)
     {
         int option_index = 0;
@@ -621,7 +643,6 @@ int main (int argc, char *argv[]) {
 
         switch (c) {
             case 'i':
-                printf("option '%c' with value '%s'\n", c, optarg);
                 yyin = fopen(optarg, "r");
                 yyparse();
                 fclose(yyin);
@@ -633,12 +654,10 @@ int main (int argc, char *argv[]) {
                 break;
 
             case 't':
-                printf("option '%c' with value '%s'\n", c, optarg);
                 fileSymbolTable = optarg;
                 break;
 
             case 's':
-                printf("option '%c' with value '%s'\n", c, optarg);
                 fileStack = optarg;
                 dump_stack_init(fileStack);
                 break;
@@ -665,7 +684,6 @@ int main (int argc, char *argv[]) {
       yyin = fopen(argv[optind++], "r");
       yyparse();
       fclose(yyin);
-      printf("Done\n");
     }
 
     if(!hasInputOpt && argc == 1) {
@@ -700,8 +718,7 @@ void print_tree(struct node* tree) {
     printf("\n\nYou can see a visual representation of the parse tree. Copy and paste the result on the website: http://mshang.ca/syntree/\n");
 }
 
-void print_preorder(struct node *tree)
-{
+void print_preorder(struct node *tree) {
     printf("[");
 
     printf("%s ", tree->token);
@@ -717,10 +734,47 @@ void print_preorder(struct node *tree)
     printf("]");
 }
 
+bucket *check_undeclared(char *id) {
+    
+    struct bucket *symbol;
+    struct stack_bucket *sb = scopes->head;
+
+    while (sb != NULL)
+    {
+        sprintf(buffer, "%s@%s", sb->text, id);
+        symbol = lookup(buffer);
+        if(symbol == NULL) {
+            sb = sb->next;
+        } else {
+            break;
+        }
+    }
+
+    if(symbol == NULL) {
+        printf("%s%sError:%s '%s' undeclared at line %d\n", RED, BOLD, RESET, id, yylineno);
+        /* exit(0); */
+    }     
+    return symbol;
+}
+
+void check_declaration(char *id) {
+    bucket *symbol = lookup(id);
+
+    char * string = strdup(id);
+    char * token = strtok(string, "@");
+    token = strtok(NULL, "@");
+
+    if(symbol != NULL) {
+        printf("%s%sError:%s multiple declaration of '%s' at line %d\n", RED, BOLD, RESET, token, yylineno);
+        /* exit(0); */
+    }     
+}
+
 char *insert_key(char *id) {
-  sprintf(buffer, "%s@%s", top(scopes), id);
-  insert(buffer, "", "", yylineno);
-  return buffer;
+    sprintf(buffer, "%s@%s", top(scopes), id);
+    check_declaration(buffer);
+    insert(buffer, "", "", yylineno);
+    return buffer;
 }
 
 void yyerror(char *msg) {
@@ -729,21 +783,21 @@ void yyerror(char *msg) {
 }
 
 void print_help(char *compilername) {
-   printf("\n%sUSAGE%s\n", BEGIN_BOLD, END_BOLD);
-   printf("\t%s%s%s INPUTFILE OUTPUTFILE [OPTION]...\n\n", BEGIN_BOLD, compilername, END_BOLD);
-   printf("%sOPTIONS%s\n", BEGIN_BOLD, END_BOLD);
-   printf("\tRequired arguments to long options are mandatory for short options too.\n\n");
-   printf("\t%s-i, --input=%sFILE\n", BEGIN_BOLD, END_BOLD);
-   printf("\t\tsimple++ source code that must be processed\n\n");
-   printf("\t%s-o, --output=%sFILE\n", BEGIN_BOLD, END_BOLD);
-   printf("\t\tfunctional program file in simplified c that will be generated\n\n");
-   printf("\t%s-t, --dump-symboltable=%sFILE\n", BEGIN_BOLD, END_BOLD);
-   printf("\t\tat the end of parsing, generates an log file which is a snapshot of the symbol table\n\n");
-   printf("\t%s-s, --dump-stack=%sFILE\n", BEGIN_BOLD, END_BOLD);
-   printf("\t\twhile parsing, generates and update an log file with the state of the scope stack for each line of parsed code\n\n");
-   printf("\t%s-p, --print-parsetree%s\n", BEGIN_BOLD, END_BOLD);
-   printf("\t\tdisplay the syntax tree of the analyzed code in preorder\n\n");
-   printf("\t%s-h, --help%s\n", BEGIN_BOLD, END_BOLD);
-   printf("\t\tdisplay this help and exit\n\n");
-   exit(1);
+    printf("\n%sUSAGE%s\n", BOLD, RESET);
+    printf("\t%s%s%s INPUTFILE OUTPUTFILE [OPTION]...\n\n", BOLD, compilername, RESET);
+    printf("%sOPTIONS%s\n", BOLD, RESET);
+    printf("\tRequired arguments to long options are mandatory for short options too.\n\n");
+    printf("\t%s-i, --input=%sFILE\n", BOLD, RESET);
+    printf("\t\tsimple++ source code that must be processed\n\n");
+    printf("\t%s-o, --output=%sFILE\n", BOLD, RESET);
+    printf("\t\tfunctional program file in simplified c that will be generated\n\n");
+    printf("\t%s-t, --dump-symboltable=%sFILE\n", BOLD, RESET);
+    printf("\t\tat the end of parsing, generates an log file which is a snapshot of the symbol table\n\n");
+    printf("\t%s-s, --dump-stack=%sFILE\n", BOLD, RESET);
+    printf("\t\twhile parsing, generates and update an log file with the state of the scope stack for each line of parsed code\n\n");
+    printf("\t%s-p, --print-parsetree%s\n", BOLD, RESET);
+    printf("\t\tdisplay the syntax tree of the analyzed code in preorder\n\n");
+    printf("\t%s-h, --help%s\n", BOLD, RESET);
+    printf("\t\tdisplay this help and exit\n\n");
+    exit(1);
 }

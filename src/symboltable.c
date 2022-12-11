@@ -24,10 +24,10 @@ unsigned int hash(char *key)
 bucket *lookup(char *name)
 {
     unsigned int hashval = hash(name);
-    bucket *l = table[hashval];
-    while ((l != NULL) && (strcmp(name, l->text) != 0))
-        l = l->next;
-    return l;
+    bucket *b = table[hashval];
+    while ((b != NULL) && (strcmp(name, b->text) != 0))
+        b = b->next;
+    return b;
 }
 
 void insert(char *text, char *datatype, char *type, int linenumber)
