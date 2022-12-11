@@ -25,6 +25,7 @@ int idScope = 1;
 char auxScope[10];
 char auxType[40];
 int auxDimension=0;
+int sizeList = 0;
 
 struct node { 
     struct node *left; 
@@ -110,7 +111,7 @@ decl : type dimen_op_opt ids SEMI_COLON
        { 
          struct node *temp = mknode($1.nd, $2.nd, "type");
 	 $3.symbol = malloc(sizeof(struct bucket));
-	 strcpy($3.symbol->type,$1.name);
+	 //strcpy($3.symbol->type,$1.name);
          strcat($3.symbol->type,auxType);
          strcpy(auxType,"");
          printf("Tipo de %s -> %s (auxType = ->%s<-)\n",$3.name, $3.symbol->type,auxType);
@@ -118,7 +119,9 @@ decl : type dimen_op_opt ids SEMI_COLON
        }
        | decl_init_list
        {
-         $$.nd = mknode($1.nd, NULL, "decl");
+         strcpy(auxType,"");
+         sizeList = 0;
+	 $$.nd = mknode($1.nd, NULL, "decl");
        }
        | pointer_decl
        {
@@ -128,6 +131,13 @@ decl : type dimen_op_opt ids SEMI_COLON
 
 decl_init_list : type LBRACK RBRACK ids SEMI_COLON
                  {
+                   $3.symbol = malloc(sizeof(struct bucket));
+                   strcpy($3.symbol->type,$1.name);
+                   strcat($3.symbol->type,"[");
+                   char tempSize[40];
+                   sprintf(tempSize,"%d",sizeList);
+		   strcat($3.symbol->type,tempSize);
+                   strcat($3.symbol->type,"]");
                    struct node *temp = mknode($1.nd, NULL, "ids");
                    $$.nd = mknode(temp, NULL, "decl-init-list");
                  }
@@ -184,7 +194,12 @@ pointer_method : ID DOT POINT_TO LPAREN ID RPAREN SEMI_COLON {}
 
 ids : ID assign_op LBRACE expr_list RBRACE
       {
-          insert_key($1.name);
+          strcat(auxType,"[");
+          char temp[40];
+          sprintf(temp,"%d",sizeList);
+          strcat(auxType,temp);
+          strcat(auxType,"]");
+	  insert_key($1.name);
           $$.nd = mknode($2.nd, $4.nd, $1.name);
       }
       | ids COMMA ID assign_op expr
@@ -219,6 +234,7 @@ expr_list : expr_list COMMA expr
             }
             | expr                 
             {
+                //printf("+1 INDICE");
                 $$.nd = mknode($1.nd, NULL, "expr");
             }
             ;
@@ -421,54 +437,67 @@ assign_op : ASSIGN        { $$.nd = mknode(NULL, NULL, $1.name); }
 expr : ID dimen_ind_op    
        {
           check_undeclared($1.name);
+          sizeList++;
           $$.nd = mknode($2.nd, NULL, $1.name);
        }
        | INT_NUMBER         
        {
+          sizeList++;
           $$.nd = mknode(NULL, NULL, $1.name);
        }
        | DOUBLE_NUMBER      
        {
+          sizeList++;
           $$.nd = mknode(NULL, NULL, $1.name);
        }
        | STRING_LITERAL     
        {
+          sizeList++;
           $$.nd = mknode(NULL, NULL, $1.name);
        }
        | TRUE               
        {
+          sizeList++;
           $$.nd = mknode(NULL, NULL, $1.name);
        }
        | FALSE              
        {
+          sizeList++;
           $$.nd = mknode(NULL, NULL, $1.name);
        }
        | func_call          
        {
+          sizeList++;
           $$.nd = mknode($1.nd, NULL, "func-call");
        }
        | LPAREN expr RPAREN 
        {
+          sizeList++;
           $$.nd = mknode($2.nd, NULL, "expr");
        }
        | expr PLUS expr     
        {
+          sizeList++;
           $$.nd = mknode($1.nd, $3.nd, $2.name);
        }
        | expr MINUS expr    
        {
+          sizeList++;
           $$.nd = mknode($1.nd, $3.nd, $2.name);
        }
        | expr MULT expr     
        {
+          sizeList++;
           $$.nd = mknode($1.nd, $3.nd, $2.name);
        }
        | expr DIVIDE expr   
        {
+          sizeList++;
           $$.nd = mknode($1.nd, $3.nd, $2.name);
        }
        | expr MODULE expr   
        {
+          sizeList++;
           $$.nd = mknode($1.nd, $3.nd, $2.name);
        }
        ;

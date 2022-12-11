@@ -10,8 +10,8 @@ DIR_TESTS=../tests
 FILE_STACK=$(DIR_LOGS)/$(@:test-%=%)/$(@:test-%=%)-stack.dump
 FILE_SYMBOLTABLE=$(DIR_LOGS)/$(@:test-%=%)/$(@:test-%=%)-symboltable.dump
 
-OPTIONS=
-# OPTIONS=--dump-stack=$(FILE_STACK) -t $(FILE_SYMBOLTABLE) -p
+#OPTIONS=
+OPTIONS=--dump-stack=$(FILE_STACK) -t $(FILE_SYMBOLTABLE) -p
 
 ALGORITHMS=test-generico test-problema1 test-problema2 test-problema3 test-mergeSort test-switchCase test-escopos
 
