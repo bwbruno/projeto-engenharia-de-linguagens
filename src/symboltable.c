@@ -43,6 +43,7 @@ void insert(char *text, char *datatype, char *type, int linenumber)
         b = (bucket *)malloc(sizeof(bucket));
         strcpy(b->text, text);
         strcpy(b->datatype, datatype);
+        strcpy(b->type, type);
         b->lineslist = (linenumber_bucket *)malloc(sizeof(linenumber_bucket));
         b->lineslist->line = linenumber;
         b->lineslist->next = NULL;
@@ -113,8 +114,8 @@ void dump_symboltable(char *filename)
     printf("Generating '%s' symbol table log... ", filename);
     FILE *file = fopen(filename, "w");
     fprintf(file, "\n");
-    fprintf(file, "Scope@Id   Datatype  Type      Line Numbers\n");
-    fprintf(file, "---------- -------- --------- -----------------\n");
+    fprintf(file, "Scope@Id   Datatype  Type          Line Numbers\n");
+    fprintf(file, "---------- -------- ------------- -----------------\n");
 
     for (int i = 0; i < SIZE; ++i)
     {
@@ -127,7 +128,7 @@ void dump_symboltable(char *filename)
                 linenumber_bucket *t = b->lineslist;
                 fprintf(file, "%-10s ", b->text);
                 fprintf(file, "%-8s ", b->datatype);
-                fprintf(file, "%-9s ", b->type);
+                fprintf(file, "%-14s ", b->type);
 
                 while (t != NULL)
                 {

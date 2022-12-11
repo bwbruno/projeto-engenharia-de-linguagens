@@ -8,8 +8,8 @@ typedef struct linenumber_bucket {
 
 typedef struct bucket {
     char text[SIZE_TEXT];
-    char datatype[20];
-    char type[20];
+    char datatype[40];
+    char type[40];
     linenumber_bucket *lineslist;
     struct bucket *next;
 } bucket;
@@ -21,5 +21,5 @@ unsigned int hash(char *s0);
 bucket *lookup(char *text);
 void insert(char *text, char *datatype, char *type, int linenumber);
 void insert_linenumber(char *text, char *datatype, char *type, int linenumber);
-void print_symboltable(); 
+void print_symboltable();
 void dump_symboltable(char *filename);
