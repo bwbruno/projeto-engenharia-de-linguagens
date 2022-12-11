@@ -1,4 +1,6 @@
-int a = 2;
+int a;
+
+int[2][2][2] x;
 
 int a,b,c,d=0;
 
