@@ -44,9 +44,10 @@ typedef union Value{
 void print_tree(struct node*);
 void print_preorder(struct node *);
 struct node* mknode(struct node *left, struct node *right, char *token);
-char *get_symbol_type(char *id);
+char *get_symbol_datatype(char *id);
 void *set_symbol_datatype(char *id, char *type);
-int check_types(char *type1, char *type2, char *operand);
+int check_types_expr(char *type1, char *type2, char *operand);
+int check_types_assign(char *type1, char *type2, char *id);
 bucket *check_undeclared(char *id);
 void check_declaration(char *id);
 char *insert_key(char *id, char *type);
@@ -82,9 +83,10 @@ void print_help();
 
 %left PLUS MINUS
 %left MULT DIVIDE MODULE
+%left CAST
 
-%type <nd_obj> prog decls_opt subprogrs decls decl type dimen_op_opt decl_init_list pointer_decl dimen_ops dimen_op  pointer_type pointer_method assign_op subprog args_op stmt_list args arg stmt while_stmt if_stmt assign_stmt for_stmt switch_stmt inc_dec print_stmt scan_stmt func_args dimen_ind_op ind_op condition else_stmt_opt for_args comp_op switch_cases case logic_op c_term comp comp_term 
-%type <nd_lit> expr_list expr num_expr ids procedure function func_call return_stmt 
+%type <nd_obj> prog decls_opt subprogrs decls decl dimen_op_opt decl_init_list pointer_decl dimen_ops dimen_op  pointer_type pointer_method assign_op subprog args_op stmt_list args arg stmt while_stmt if_stmt assign_stmt for_stmt switch_stmt inc_dec print_stmt scan_stmt func_args dimen_ind_op ind_op condition else_stmt_opt for_args comp_op switch_cases case logic_op c_term comp comp_term 
+%type <nd_lit> expr_list expr num_expr ids procedure type function func_call return_stmt 
 
 %start prog
 
@@ -123,7 +125,7 @@ decl : type dimen_op_opt ids SEMI_COLON
             //strcpy($3.symbol->type,$1.name);
             strcat($3.symbol->type,auxType);
             strcpy(auxType,"");
-            printf("Tipo de %s -> %s (auxType = ->%s<-)\n",$3.name, $3.symbol->type,auxType);
+            // printf("Tipo de %s -> %s (auxType = ->%s<-)\n",$3.name, $3.symbol->type,auxType);
             $$.nd = mknode(temp, $3.nd, "ids");
        }
        | decl_init_list
@@ -214,14 +216,17 @@ ids : ID assign_op LBRACE expr_list RBRACE
       | ids COMMA ID assign_op expr
       {
           insert_key($3.name, "variable");
+          char *id_type = get_symbol_datatype($3.name);
+          check_types_assign(id_type, $5.type, $3.name);
           struct node *temp = mknode(NULL, NULL, $3.name);
 	      struct node *tempDir = mknode(temp, $5.nd, $4.name);
           $$.nd = mknode($1.nd, tempDir, "comma");
       }
       | ID assign_op expr
       {
-          printf("id = expr.type:: %s ", $3.type);
           insert_key($1.name, "variable");
+          char *id_type = get_symbol_datatype($1.name);
+          check_types_assign(id_type, $3.type, $1.name);
           struct node *temp = mknode(NULL, NULL, $1.name);
 	      $$.nd = mknode(temp, $3.nd, $2.name);
       }
@@ -311,13 +316,13 @@ args : args COMMA arg
 
 arg : type dimen_op ID 
       {
-          printf("%sBug?? Arg Type idScope::%s %d\n", RED, RESET, idScope);
+        //   printf("%sBug?? Arg Type idScope::%s %d\n", RED, RESET, idScope);
           insert_key($3.name, "variable");
           $$.nd = mknode($1.nd, $2.nd, $3.name);
       }
       | pointer_type ID  
       {
-          printf("%sBug?? Arg Point idScope::%s %d\n", RED, RESET, idScope);
+        //   printf("%sBug?? Arg Point idScope::%s %d\n", RED, RESET, idScope);
           insert_key($2.name, "variable");
           $$.nd = mknode($1.nd, NULL, $2.name);
       }
@@ -393,7 +398,7 @@ stmt : while_stmt
 func_call : ID LPAREN func_args RPAREN 
             {
                 strcpy($$.name, $1.name);
-                char *id_type = get_symbol_type($1.name);
+                char *id_type = get_symbol_datatype($1.name);
                 strcpy($$.type, id_type);
                 $$.nd = mknode($3.nd, NULL, "func-call");
             }
@@ -417,7 +422,8 @@ return_stmt : RETURN expr SEMI_COLON
 
 assign_stmt : ID dimen_ind_op assign_op expr
               {
-                 check_undeclared($1.name);
+                 char *id_type = get_symbol_datatype($1.name);
+                 check_types_assign(id_type, $4.type, $1.name);
                  //struct node *temp = mknode($2.nd, $4.nd, $1.name);
                  struct node *aux = mknode(NULL,NULL,$1.name);
                  $3.nd = mknode(aux, $4.nd, $3.name);
@@ -452,7 +458,7 @@ expr : ID dimen_ind_op
        {
           sizeList++;
           strcpy($$.name, $1.name);
-          char *id_type = get_symbol_type($1.name);
+          char *id_type = get_symbol_datatype($1.name);
           strcpy($$.type, id_type);
           $$.nd = mknode($2.nd, NULL, $1.name);
        }
@@ -508,39 +514,40 @@ expr : ID dimen_ind_op
        | expr PLUS expr     
        {
           sizeList++;
-          check_types($1.type, $3.type, $2.name);
+          check_types_expr($1.type, $3.type, $2.name);
           $$.nd = mknode($1.nd, $3.nd, $2.name);
        }
        | expr MINUS expr    
        {
           sizeList++;
-          check_types($1.type, $3.type, $2.name);
+          check_types_expr($1.type, $3.type, $2.name);
           $$.nd = mknode($1.nd, $3.nd, $2.name);
        }
        | expr MULT expr     
        {
           sizeList++;
-          check_types($1.type, $3.type, $2.name);
+          check_types_expr($1.type, $3.type, $2.name);
           $$.nd = mknode($1.nd, $3.nd, $2.name);
        }
        | expr DIVIDE expr   
        {
           sizeList++;
-          check_types($1.type, $3.type, $2.name);
+          check_types_expr($1.type, $3.type, $2.name);
           $$.nd = mknode($1.nd, $3.nd, $2.name);
        }
        | expr MODULE expr   
        {
           sizeList++;
-          check_types($1.type, $3.type, $2.name);
+          check_types_expr($1.type, $3.type, $2.name);
           $$.nd = mknode($1.nd, $3.nd, $2.name);
        }
+       | LPAREN type RPAREN expr %prec CAST {}
        ;
 
 num_expr : ID
            { 
                 strcpy($$.name, $1.name);
-                char *id_type = get_symbol_type($1.name);
+                char *id_type = get_symbol_datatype($1.name);
                 strcpy($$.type, id_type);
                 $$.nd = mknode(NULL, NULL, $1.name);
            }
@@ -552,33 +559,36 @@ num_expr : ID
            }
            | LPAREN num_expr RPAREN
            {
+                strcpy($$.name, $2.name);
+                strcpy($$.type, $2.type);
                 $$.nd = mknode($2.nd, NULL, "num-expr");
            }
            | num_expr PLUS num_expr
            {
-                check_types($1.type, $3.type, $2.name);
+                check_types_expr($1.type, $3.type, $2.name);
                 $$.nd = mknode($1.nd, $3.nd, $2.name);
            }
            | num_expr MINUS num_expr
            {
-                check_types($1.type, $3.type, $2.name);
+                check_types_expr($1.type, $3.type, $2.name);
                 $$.nd = mknode($1.nd, $3.nd, $2.name);
            }
            | num_expr MULT num_expr
            {
-                check_types($1.type, $3.type, $2.name);
+                check_types_expr($1.type, $3.type, $2.name);
                 $$.nd = mknode($1.nd, $3.nd, $2.name);
            }
            | num_expr DIVIDE num_expr
            {
-                check_types($1.type, $3.type, $2.name);
+                check_types_expr($1.type, $3.type, $2.name);
                 $$.nd = mknode($1.nd, $3.nd, $2.name);
            }
            | num_expr MODULE num_expr
            {
-                check_types($1.type, $3.type, $2.name);
+                check_types_expr($1.type, $3.type, $2.name);
                 $$.nd = mknode($1.nd, $3.nd, $2.name);
            }
+           | LPAREN type RPAREN expr %prec CAST {}
            ; 
 
 while_stmt : WHILE LPAREN condition RPAREN {sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++;} LBRACE stmt_list RBRACE {pop(scopes);}
@@ -757,7 +767,7 @@ int main (int argc, char *argv[]) {
                 break;
 
             case '?':
-                printf("Error! Try \"%s --help\" for more information.\n", argv[0]);
+                printf("error! try \"%s --help\" for more information.\n", argv[0]);
                 exit(0);
                 break;
 
@@ -773,7 +783,7 @@ int main (int argc, char *argv[]) {
     }
 
     if(!hasInputOpt && argc == 1) {
-         printf("%s: Fatal Error! No input files\n", argv[0]);
+         printf("%s: fatal error! no input files\n", argv[0]);
          exit(0);
     }
 
@@ -824,9 +834,9 @@ void print_preorder(struct node *tree) {
     printf("]");
 }
 
-char *get_symbol_type(char *id) {
+char *get_symbol_datatype(char *id) {
     struct bucket *symbol = check_undeclared(id);
-    return symbol->type;
+    return symbol->datatype;
 }
 
 void *set_symbol_datatype(char *id, char *type) {
@@ -834,13 +844,24 @@ void *set_symbol_datatype(char *id, char *type) {
     strcpy(symbol->datatype, type);
 }
 
-int check_types(char *type1, char *type2, char *operand) {
+int check_types_expr(char *type1, char *type2, char *operand) {
 
     if(!strcmp(type1, type2)) {
         return 1;
     }
 
-    printf("%s%sTypeError:%s unsupported operand type for '%s': '%s' and '%s' at line %d\n", RED, BOLD, RESET, operand, type1, type2, yylineno);
+    printf("%s%stype error:%s unsupported operand type for '%s': '%s' and '%s' at line %d\n", RED, BOLD, RESET, operand, type1, type2, yylineno);
+    /* exit(0); */
+    return 0;
+}
+
+int check_types_assign(char *type1, char *type2, char *id) {
+
+    if(!strcmp(type1, type2)) {
+        return 1;
+    }
+
+    printf("%s%stype error:%s '%s' is a %s object and does not suport '%s' assignment at line %d\n", RED, BOLD, RESET, id, type1, type2, yylineno);
     /* exit(0); */
     return 0;
 }
@@ -863,8 +884,8 @@ bucket *check_undeclared(char *id) {
     }
 
     if(symbol == NULL) {
-        printf("%s%sError:%s '%s' undeclared at line %d\n", RED, BOLD, RESET, id, yylineno);
-        /* exit(0); */
+        printf("%s%serror:%s '%s' undeclared at line %d\n", RED, BOLD, RESET, id, yylineno);
+        exit(0);
     }     
     return symbol;
 }
@@ -877,7 +898,7 @@ void check_declaration(char *id) {
     token = strtok(NULL, "@");
 
     if(symbol != NULL) {
-        printf("%s%sError:%s multiple declaration of '%s' at line %d\n", RED, BOLD, RESET, token, yylineno);
+        printf("%s%serror:%s multiple declaration of '%s' at line %d\n", RED, BOLD, RESET, token, yylineno);
         /* exit(0); */
     }     
 }
@@ -890,7 +911,7 @@ char *insert_key(char *id, char *type) {
 }
 
 void yyerror(char *msg) {
-    fprintf (stderr, "%d: %s at '%s'\n", yylineno, msg, yytext);
+    fprintf (stderr, "%s%s%s:%s '%s' at line %d\n", RED, BOLD, msg, RESET, yytext, yylineno);
     exit(1);
 }
 

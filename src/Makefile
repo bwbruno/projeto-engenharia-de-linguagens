@@ -15,7 +15,7 @@ FILE_SYMBOLTABLE=$(DIR_LOGS)/$(@:test-%=%)/$(@:test-%=%)-symboltable.dump
 OPTIONS=--dump-stack=$(FILE_STACK) -t $(FILE_SYMBOLTABLE)
 
 ALGORITHMS=test-generico test-problema1 test-problema2 test-problema3 test-mergeSort test-switchCase test-escopos
-BROKEN_ALGORITHMS=test-broken-multipleDeclarations test-broken-undeclared test-broken-typeErrorOnExpression
+BROKEN_ALGORITHMS=test-broken-multipleDeclarations test-broken-undeclared test-broken-typeErrorOnExpression test-broken-typeErrorOnAssignment
 
 build:
 	bison -d -v -g parser.y
@@ -41,9 +41,9 @@ BOLD=\x1B[1m
 CYAN=\x1B[36m
 
 $(ALGORITHMS):
-	@echo -e '$(CYAN)$(BOLD)$@$(RESET)'
+	@echo -e '\n$(CYAN)$(BOLD)make $@$(RESET)'
 	./$(COMPILER) $(OPTIONS) $(DIR_SOURCE)/$(@:test-%=%).spp
 
 $(BROKEN_ALGORITHMS):
-	@echo -e '$(CYAN)$(BOLD)$@$(RESET)'
+	@echo -e '\n$(CYAN)$(BOLD)make $@$(RESET)'
 	./$(COMPILER) $(DIR_BROKEN_SOURCE)/$(@:test-broken-%=%).spp
