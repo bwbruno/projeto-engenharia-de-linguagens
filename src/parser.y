@@ -27,6 +27,20 @@ char auxType[40];
 int auxDimension=0;
 int sizeList = 0;
 
+enum typecasting {
+    SAME_TYPES,
+    INT_TO_FLOAT,
+    FLOAT_TO_INT,
+    DOUBLE_TO_FLOAT,
+    FLOAT_TO_DOUBLE,
+    INT_TO_STRING,
+    STRING_TO_INT,
+    FLOAT_TO_STRING,
+    STRING_TO_FLOAT,
+    DOUBLE_TO_STRING,
+    STRING_TO_DOUBLE
+};
+
 struct node { 
     struct node *left; 
     struct node *right; 
@@ -46,6 +60,7 @@ void print_preorder(struct node *);
 struct node* mknode(struct node *left, struct node *right, char *token);
 char *get_symbol_datatype(char *id);
 void *set_symbol_datatype(char *id, char *type);
+int check_types(char *type1, char *type2);
 int check_types_expr(char *type1, char *type2, char *operand);
 int check_types_assign(char *type1, char *type2, char *id);
 bucket *check_undeclared(char *id);
@@ -81,9 +96,14 @@ void print_help();
 %token <nd_obj> INCREMENT DECREMENT PLUS MINUS MULT DIVIDE MODULE ADD_ASSIGN SUB_ASSIGN MULT_ASSIGN DIVIDE_ASSIGN MODULE_ASSIGN ASSIGN
 %token <nd_obj> EQ NEQ LT LE GT GE AND OR NOT
 
+%left POSINC POSDEC
+%left OR
+%left AND
+%left EQ NEQ
+%left LT GT LE GE
 %left PLUS MINUS
 %left MULT DIVIDE MODULE
-%left CAST
+%right CAST PREINC PREDEC NOT
 
 %type <nd_obj> prog decls_opt subprogrs decls decl dimen_op_opt decl_init_list pointer_decl dimen_ops dimen_op  pointer_type pointer_method assign_op subprog args_op stmt_list args arg stmt while_stmt if_stmt assign_stmt for_stmt switch_stmt inc_dec print_stmt scan_stmt func_args dimen_ind_op ind_op condition else_stmt_opt for_args comp_op switch_cases case logic_op c_term comp comp_term 
 %type <nd_lit> expr_list expr num_expr ids procedure type function func_call return_stmt 
@@ -473,7 +493,7 @@ expr : ID dimen_ind_op
        {
           sizeList++;
           strcpy($$.name, $1.name);
-          sprintf($$.type, "double");
+          sprintf($$.type, "float");
           $$.nd = mknode(NULL, NULL, $1.name);
        }
        | STRING_LITERAL     
@@ -541,7 +561,13 @@ expr : ID dimen_ind_op
           check_types_expr($1.type, $3.type, $2.name);
           $$.nd = mknode($1.nd, $3.nd, $2.name);
        }
-       | LPAREN type RPAREN expr %prec CAST {}
+       | LPAREN type RPAREN expr %prec CAST
+       {
+          sizeList++;
+          strcpy($$.name, $4.name);
+          strcpy($$.type, $2.name);
+          $$.nd = mknode($2.nd, $4.nd, "cast");
+       }
        ;
 
 num_expr : ID
@@ -588,7 +614,13 @@ num_expr : ID
                 check_types_expr($1.type, $3.type, $2.name);
                 $$.nd = mknode($1.nd, $3.nd, $2.name);
            }
-           | LPAREN type RPAREN expr %prec CAST {}
+           | LPAREN type RPAREN expr %prec CAST
+           {
+               sizeList++;
+               strcpy($$.name, $4.name);
+               strcpy($$.type, $2.name);
+               $$.nd = mknode($2.nd, $4.nd, "cast");
+           }
            ; 
 
 while_stmt : WHILE LPAREN condition RPAREN {sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++;} LBRACE stmt_list RBRACE {pop(scopes);}
@@ -633,10 +665,10 @@ for_args : assign_stmt SEMI_COLON ID comp_op ID SEMI_COLON inc_dec
          }
          ;
 
-inc_dec : ID INCREMENT { check_undeclared($1.name); }
-        | ID DECREMENT { check_undeclared($1.name); }
-        | INCREMENT ID { check_undeclared($2.name); }
-        | DECREMENT ID { check_undeclared($2.name); }
+inc_dec : ID INCREMENT %prec POSINC { check_undeclared($1.name); }
+        | ID DECREMENT %prec POSDEC { check_undeclared($1.name); }
+        | INCREMENT ID %prec PREINC { check_undeclared($2.name); }
+        | DECREMENT ID %prec PREDEC { check_undeclared($2.name); }
         ;
 
 print_stmt : PRINT LPAREN expr RPAREN
@@ -844,10 +876,27 @@ void *set_symbol_datatype(char *id, char *type) {
     strcpy(symbol->datatype, type);
 }
 
+int check_types(char *type1, char *type2) {
+    if(!strcmp(type2, type1)) return SAME_TYPES; 
+    if(!strcmp(type2, "int") && !strcmp(type1, "float")) return INT_TO_FLOAT;
+    if(!strcmp(type2, "float") && !strcmp(type1, "int")) return FLOAT_TO_INT;
+    if(!strcmp(type2, "double") && !strcmp(type1, "float")) return DOUBLE_TO_FLOAT;
+    if(!strcmp(type2, "float") && !strcmp(type1, "double")) return FLOAT_TO_DOUBLE;
+    if(!strcmp(type2, "int") && !strcmp(type1, "string")) return INT_TO_STRING;
+    if(!strcmp(type2, "string") && !strcmp(type1, "int")) return STRING_TO_INT;
+    if(!strcmp(type2, "float") && !strcmp(type1, "string")) return FLOAT_TO_STRING;
+    if(!strcmp(type2, "string") && !strcmp(type1, "float")) return STRING_TO_FLOAT;
+    if(!strcmp(type2, "double") && !strcmp(type1, "string")) return DOUBLE_TO_STRING;
+}
+
 int check_types_expr(char *type1, char *type2, char *operand) {
 
-    if(!strcmp(type1, type2)) {
-        return 1;
+    int c = check_types(type1, type2);
+
+    switch(c) {
+        case SAME_TYPES: return SAME_TYPES;
+        case INT_TO_FLOAT: return INT_TO_FLOAT;
+        case FLOAT_TO_DOUBLE: return FLOAT_TO_DOUBLE;
     }
 
     printf("%s%stype error:%s unsupported operand type for '%s': '%s' and '%s' at line %d\n", RED, BOLD, RESET, operand, type1, type2, yylineno);
@@ -857,8 +906,12 @@ int check_types_expr(char *type1, char *type2, char *operand) {
 
 int check_types_assign(char *type1, char *type2, char *id) {
 
-    if(!strcmp(type1, type2)) {
-        return 1;
+    int c = check_types(type1, type2);
+
+    switch(c) {
+        case SAME_TYPES: return SAME_TYPES;
+        case INT_TO_FLOAT: return INT_TO_FLOAT;
+        case FLOAT_TO_DOUBLE: return FLOAT_TO_DOUBLE;
     }
 
     printf("%s%stype error:%s '%s' is a %s object and does not suport '%s' assignment at line %d\n", RED, BOLD, RESET, id, type1, type2, yylineno);

@@ -28,8 +28,9 @@ function main(int b, int c) : int {
     }
     print(a);
     float o = 1.5;
-    a = o;
-    a = (int) o + (int) b;
+    double x = 1.5;
+
+    a = (int) o + (int) x;
     
 }
 

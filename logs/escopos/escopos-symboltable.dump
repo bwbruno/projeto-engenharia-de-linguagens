@@ -2,7 +2,7 @@
 Scope@Id                  Datatype        Type           Line Numbers
 ------------------------- --------------- -------------- -----------------
 0@main                    int             function       13 
-0@merge                   float           function       36 
+0@merge                   float           function       37 
 0@a                       int             variable       5 
 0@b                       int             variable       9 
 0@c                       int             variable       9 
@@ -10,8 +10,8 @@ Scope@Id                  Datatype        Type           Line Numbers
 0@x                       int[2][2][2]    variable       7 
 0@y                       int             variable       11 
 0@z                       int[5]          variable       1 
-5@a                       int             variable       37 
-5@b                       int             variable       38 
+5@a                       int             variable       38 
+5@b                       int             variable       39 
 3@b                       int             variable       23 
 3@d                       int             variable       24 
 0@ids                     int             variable       3 
@@ -19,5 +19,6 @@ Scope@Id                  Datatype        Type           Line Numbers
 1@c                       int             variable       13 
 3@z                       int             variable       25 
 1@o                       float           variable       30 
+1@x                       double          variable       31 
 1@z                       int             variable       20 
 
