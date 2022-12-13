@@ -49,12 +49,7 @@ void insert(char *text, char *datatype, char *type, int linenumber)
         b->lineslist->next = NULL;
         b->next = table[index];
         table[index] = b;
-        // printf("Inserted %s for the first time with linenumber %d!\n", text, linenumber);
     }
-    // else{
-    //     fprintf(stderr, "A multiple declaration of variable %s at line %d\n", text, linenumber);
-    //     exit(1);
-    // }
 }
 
 void insert_linenumber(char *text, char *datatype, char *type, int linenumber)
@@ -114,8 +109,8 @@ void dump_symboltable(char *filename)
     printf("Generating '%s' symbol table log... ", filename);
     FILE *file = fopen(filename, "w");
     fprintf(file, "\n");
-    fprintf(file, "Scope@Id   Datatype  Type          Line Numbers\n");
-    fprintf(file, "---------- -------- ------------- -----------------\n");
+    fprintf(file, "Scope@Id                  Datatype        Type           Line Numbers\n");
+    fprintf(file, "------------------------- --------------- -------------- -----------------\n");
 
     for (int i = 0; i < SIZE; ++i)
     {
@@ -126,8 +121,8 @@ void dump_symboltable(char *filename)
             while (b != NULL)
             {
                 linenumber_bucket *t = b->lineslist;
-                fprintf(file, "%-10s ", b->text);
-                fprintf(file, "%-8s ", b->datatype);
+                fprintf(file, "%-25s ", b->text);
+                fprintf(file, "%-15s ", b->datatype);
                 fprintf(file, "%-14s ", b->type);
 
                 while (t != NULL)

@@ -66,7 +66,7 @@ procedure printArrayProced(pointer<int> A, int size)
 function main() : int
 {
     int[] arr = { 12, 11, 13, 5, 6, 7 };
-    int arr_size = sizeof(arr) / sizeof(arr[0]);
+    int arr_size;
     print("Given array is \n");
     pointer<int> ptr;
     ptr.pointTo(arr);

@@ -27,6 +27,22 @@ char auxType[40];
 int auxDimension=0;
 int sizeList = 0;
 
+enum typecasting {
+    SAME_TYPES,
+    INT_TO_FLOAT,
+    INT_TO_DOUBLE,
+    INT_TO_STRING,
+    FLOAT_TO_INT,
+    FLOAT_TO_DOUBLE,
+    FLOAT_TO_STRING,
+    DOUBLE_TO_INT,
+    DOUBLE_TO_FLOAT,
+    DOUBLE_TO_STRING,
+    STRING_TO_INT,
+    STRING_TO_FLOAT,
+    STRING_TO_DOUBLE
+};
+
 struct node { 
     struct node *left; 
     struct node *right; 
@@ -44,25 +60,36 @@ typedef union Value{
 void print_tree(struct node*);
 void print_preorder(struct node *);
 struct node* mknode(struct node *left, struct node *right, char *token);
+char *get_symbol_datatype(char *id);
+void *set_symbol_datatype(char *id, char *type);
+int check_types(char *type1, char *type2);
+int check_types_expr(char *type1, char *type2, char *operand);
+int check_types_assign(char *type1, char *type2, char *id);
 bucket *check_undeclared(char *id);
 void check_declaration(char *id);
-char *insert_key(char *id);
+char *insert_key(char *id, char *type);
 void print_help();
 
 %}
 
 %union {
-    struct var_name { 
+    struct var_obj { 
         union Value *value;
         struct bucket *symbol;
-	char name[100]; 
+        char name[100]; 
         struct node* nd;
     } nd_obj; 
+
+    struct var_lit { 
+        union Value *value;
+        struct bucket *symbol;
+        char name[100]; 
+        char type[40];
+        struct node* nd;
+    } nd_lit; 
 };
 
-%token <nd_obj> STRING_LITERAL
-%token <nd_obj> INT_NUMBER
-%token <nd_obj> DOUBLE_NUMBER
+%token <nd_lit> STRING_LITERAL INT_NUMBER DOUBLE_NUMBER
 %token <nd_obj> ID
 %token <nd_obj> INT FLOAT DOUBLE STRING BOOL ENUM POINTER POINT_TO
 %token <nd_obj> MAIN PROCEDURE FUNCTION RETURN
@@ -71,11 +98,17 @@ void print_help();
 %token <nd_obj> INCREMENT DECREMENT PLUS MINUS MULT DIVIDE MODULE ADD_ASSIGN SUB_ASSIGN MULT_ASSIGN DIVIDE_ASSIGN MODULE_ASSIGN ASSIGN
 %token <nd_obj> EQ NEQ LT LE GT GE AND OR NOT
 
+%left POSINC POSDEC
+%left OR
+%left AND
+%left EQ NEQ
+%left LT GT LE GE
 %left PLUS MINUS
 %left MULT DIVIDE MODULE
+%right CAST PREINC PREDEC NOT
 
-%type <nd_obj> ids procedure function
-%type <nd_obj> prog decls_opt subprogrs decls decl type dimen_op_opt decl_init_list pointer_decl dimen_ops dimen_op num_expr pointer_type pointer_method assign_op expr_list expr subprog args_op stmt_list args arg stmt while_stmt if_stmt assign_stmt for_stmt switch_stmt inc_dec print_stmt scan_stmt return_stmt func_call func_args dimen_ind_op ind_op condition else_stmt_opt for_args comp_op switch_cases case logic_op c_term comp comp_term 
+%type <nd_obj> prog decls_opt subprogrs decls decl dimen_op_opt decl_init_list pointer_decl dimen_ops dimen_op  pointer_type pointer_method assign_op subprog args_op stmt_list args arg stmt while_stmt if_stmt assign_stmt for_stmt switch_stmt inc_dec print_stmt scan_stmt func_args dimen_ind_op ind_op condition else_stmt_opt for_args comp_op switch_cases case logic_op c_term comp comp_term 
+%type <nd_lit> expr_list expr num_expr ids procedure type function func_call return_stmt 
 
 %start prog
 
@@ -84,9 +117,9 @@ void print_help();
 %%
 prog : { push(scopes, "0"); } decls_opt subprogrs  
        {
-         $$.nd = mknode($2.nd, $3.nd, "prog");
-         parsetree = $$.nd;
-         pop(scopes);
+            $$.nd = mknode($2.nd, $3.nd, "prog");
+            parsetree = $$.nd;
+            pop(scopes);
        }
        ;
 
@@ -99,93 +132,93 @@ decls_opt : decls
           
 decls : decls decl
         {
-          $$.nd = mknode($1.nd, $2.nd, "decls");
+            $$.nd = mknode($1.nd, $2.nd, "decls");
         }
         |  decl
         {
-          $$.nd = mknode($1.nd, NULL, "decl");
+            $$.nd = mknode($1.nd, NULL, "decl");
         }
         ;
 
 decl : type dimen_op_opt ids SEMI_COLON
        { 
-         struct node *temp = mknode($1.nd, $2.nd, "type");
-	 $3.symbol = malloc(sizeof(struct bucket));
-	 //strcpy($3.symbol->type,$1.name);
-         strcat($3.symbol->type,auxType);
-         strcpy(auxType,"");
-         printf("Tipo de %s -> %s (auxType = ->%s<-)\n",$3.name, $3.symbol->type,auxType);
-         $$.nd = mknode(temp, $3.nd, "ids");
+            struct node *temp = mknode($1.nd, $2.nd, "type");
+            $3.symbol = malloc(sizeof(struct bucket));
+            //strcpy($3.symbol->type,$1.name);
+            strcat($3.symbol->type,auxType);
+            strcpy(auxType,"");
+            // printf("Tipo de %s -> %s (auxType = ->%s<-)\n",$3.name, $3.symbol->type,auxType);
+            $$.nd = mknode(temp, $3.nd, "ids");
        }
        | decl_init_list
        {
-         strcpy(auxType,"");
-         sizeList = 0;
-	 $$.nd = mknode($1.nd, NULL, "decl");
+            strcpy(auxType,"");
+            sizeList = 0;
+            $$.nd = mknode($1.nd, NULL, "decl");
        }
        | pointer_decl
        {
-         $$.nd = mknode($1.nd, NULL, "decl");
+            $$.nd = mknode($1.nd, NULL, "decl");
        }
        ;
 
 decl_init_list : type LBRACK RBRACK ids SEMI_COLON
                  {
-                   $3.symbol = malloc(sizeof(struct bucket));
-                   strcpy($3.symbol->type,$1.name);
-                   strcat($3.symbol->type,"[");
-                   char tempSize[40];
-                   sprintf(tempSize,"%d",sizeList);
-		   strcat($3.symbol->type,tempSize);
-                   strcat($3.symbol->type,"]");
-                   struct node *temp = mknode($1.nd, NULL, "ids");
-                   $$.nd = mknode(temp, NULL, "decl-init-list");
+                    $3.symbol = malloc(sizeof(struct bucket));
+                    strcpy($3.symbol->type,$1.name);
+                    strcat($3.symbol->type,"[");
+                    char tempSize[40];
+                    sprintf(tempSize,"%d",sizeList);
+                    strcat($3.symbol->type,tempSize);
+                    strcat($3.symbol->type,"]");
+                    struct node *temp = mknode($1.nd, NULL, "ids");
+                    $$.nd = mknode(temp, NULL, "decl-init-list");
                  }
                  ;
 
 dimen_op_opt : dimen_ops
                {
-                 $$.nd = mknode($1.nd, NULL, "decl-op-opt");
+                    $$.nd = mknode($1.nd, NULL, "decl-op-opt");
                }
                | { $$.nd = NULL; }
                ;
 
 dimen_ops : dimen_ops dimen_op
             {
-              $$.nd = mknode($1.nd, $2.nd, "decl-ops");
+                $$.nd = mknode($1.nd, $2.nd, "decl-ops");
             }
             | dimen_op
             {
-              $$.nd = mknode($1.nd, NULL, "decl-op");
+                $$.nd = mknode($1.nd, NULL, "decl-op");
             }
             ;
 
 dimen_op : LBRACK num_expr RBRACK
            {
-	     char temp[40] = "";
-             strcat(temp,$1.name);
-	     strcat(temp,$2.name);
-             strcat(temp,$3.name);
-             strcat(auxType,temp);
-             //printf("+1 DIMENSÃO\n");
-             $$.nd = mknode($2.nd, NULL, "decl-op");
+                char temp[40] = "";
+                strcat(temp,$1.name);
+                strcat(temp,$2.name);
+                strcat(temp,$3.name);
+                strcat(auxType,temp);
+                //printf("+1 DIMENSÃO\n");
+                $$.nd = mknode($2.nd, NULL, "decl-op");
            }
            ; 
 
 pointer_decl : POINTER LT pointer_type GT ids SEMI_COLON
                {
-                 struct node *temp = mknode($3.nd, NULL, "ids");
-                 $$.nd = mknode(temp, NULL, "pointer-decl");
+                    struct node *temp = mknode($3.nd, NULL, "ids");
+                    $$.nd = mknode(temp, NULL, "pointer-decl");
                }
                ;
                          
 pointer_type : type 
                {
-                 $$.nd = mknode($1.nd, NULL, "type");
+                    $$.nd = mknode($1.nd, NULL, "type");
                }
                | POINTER LT pointer_type GT
                {
-                 $$.nd = mknode($3.nd, NULL, "pointer-type");
+                    $$.nd = mknode($3.nd, NULL, "pointer-type");
                }
                ;
 
@@ -199,31 +232,35 @@ ids : ID assign_op LBRACE expr_list RBRACE
           sprintf(temp,"%d",sizeList);
           strcat(auxType,temp);
           strcat(auxType,"]");
-	  insert_key($1.name);
+          insert_key($1.name, "variable");
           $$.nd = mknode($2.nd, $4.nd, $1.name);
       }
       | ids COMMA ID assign_op expr
       {
-          insert_key($3.name);
+          insert_key($3.name, "variable");
+          char *id_type = get_symbol_datatype($3.name);
+          check_types_assign(id_type, $5.type, $3.name);
           struct node *temp = mknode(NULL, NULL, $3.name);
 	      struct node *tempDir = mknode(temp, $5.nd, $4.name);
           $$.nd = mknode($1.nd, tempDir, "comma");
       }
       | ID assign_op expr
       {
-          insert_key($1.name);
+          insert_key($1.name, "variable");
+          char *id_type = get_symbol_datatype($1.name);
+          check_types_assign(id_type, $3.type, $1.name);
           struct node *temp = mknode(NULL, NULL, $1.name);
 	      $$.nd = mknode(temp, $3.nd, $2.name);
       }
       | ids COMMA ID
       {
-          insert_key($3.name);
+          insert_key($3.name, "variable");
           struct node *temp = mknode(NULL, NULL, $3.name);
 	      $$.nd = mknode($1.nd, temp, "comma");
       }
       | ID
       {   
-          insert_key($1.name);
+          insert_key($1.name, "variable");
           $$.nd = mknode(NULL, NULL, $1.name);
       }
       ;
@@ -259,24 +296,26 @@ subprog : procedure
           }
           ;
 
-procedure : PROCEDURE ID { insert_key($2.name); sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++; } LPAREN args_op RPAREN LBRACE stmt_list RBRACE
+procedure : PROCEDURE ID { insert_key($2.name, $1.name); sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++; } LPAREN args_op RPAREN LBRACE stmt_list RBRACE
             {
                 pop(scopes);
                 $$.nd = mknode($4.nd, $8.nd, $2.name);
             }
             ;
 
-function : FUNCTION ID { insert_key($2.name); sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++; } LPAREN args_op RPAREN COLON type LBRACE  stmt_list RBRACE
+function : FUNCTION ID { insert_key($2.name, $1.name); sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++; } LPAREN args_op RPAREN COLON type LBRACE  stmt_list RBRACE
            {
-               pop(scopes);
-               struct node *temp = mknode($5.nd, $11.nd, $2.name);
-               $$.nd = mknode($8.nd, temp, "type");
+                pop(scopes);
+                set_symbol_datatype($2.name, $8.name);
+                struct node *temp = mknode($5.nd, $11.nd, $2.name);
+                $$.nd = mknode($8.nd, temp, "type");
            }
-           | FUNCTION MAIN { insert_key($2.name); sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++; } LPAREN args_op RPAREN COLON type LBRACE stmt_list RBRACE
+           | FUNCTION MAIN { insert_key($2.name, $1.name); sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++; } LPAREN args_op RPAREN COLON type LBRACE stmt_list RBRACE
            {
-               pop(scopes);
-               struct node *temp = mknode($5.nd, $10.nd, $2.name);
-               $$.nd = mknode($8.nd, temp, "type");
+                pop(scopes);
+                set_symbol_datatype($2.name, $8.name);
+                struct node *temp = mknode($5.nd, $10.nd, $2.name);
+                $$.nd = mknode($8.nd, temp, "type");
            }
            ;
 
@@ -299,14 +338,14 @@ args : args COMMA arg
 
 arg : type dimen_op ID 
       {
-          printf("%sBug?? Arg Type idScope::%s %d\n", RED, RESET, idScope);
-          insert_key($3.name);
+        //   printf("%sBug?? Arg Type idScope::%s %d\n", RED, RESET, idScope);
+          insert_key($3.name, "variable");
           $$.nd = mknode($1.nd, $2.nd, $3.name);
       }
       | pointer_type ID  
       {
-          printf("%sBug?? Arg Point idScope::%s %d\n", RED, RESET, idScope);
-          insert_key($2.name);
+        //   printf("%sBug?? Arg Point idScope::%s %d\n", RED, RESET, idScope);
+          insert_key($2.name, "variable");
           $$.nd = mknode($1.nd, NULL, $2.name);
       }
       ;
@@ -380,8 +419,10 @@ stmt : while_stmt
 
 func_call : ID LPAREN func_args RPAREN 
             {
-               check_undeclared($1.name);
-               $$.nd = mknode($3.nd, NULL, "func-call");
+                strcpy($$.name, $1.name);
+                char *id_type = get_symbol_datatype($1.name);
+                strcpy($$.type, id_type);
+                $$.nd = mknode($3.nd, NULL, "func-call");
             }
             ;
 
@@ -403,7 +444,8 @@ return_stmt : RETURN expr SEMI_COLON
 
 assign_stmt : ID dimen_ind_op assign_op expr
               {
-                 check_undeclared($1.name);
+                 char *id_type = get_symbol_datatype($1.name);
+                 check_types_assign(id_type, $4.type, $1.name);
                  //struct node *temp = mknode($2.nd, $4.nd, $1.name);
                  struct node *aux = mknode(NULL,NULL,$1.name);
                  $3.nd = mknode(aux, $4.nd, $3.name);
@@ -436,104 +478,150 @@ assign_op : ASSIGN        { $$.nd = mknode(NULL, NULL, $1.name); }
 
 expr : ID dimen_ind_op    
        {
-          check_undeclared($1.name);
           sizeList++;
+          strcpy($$.name, $1.name);
+          char *id_type = get_symbol_datatype($1.name);
+          strcpy($$.type, id_type);
           $$.nd = mknode($2.nd, NULL, $1.name);
        }
        | INT_NUMBER         
        {
           sizeList++;
+          strcpy($$.name, $1.name);
+          sprintf($$.type, "int");
           $$.nd = mknode(NULL, NULL, $1.name);
        }
        | DOUBLE_NUMBER      
        {
           sizeList++;
+          strcpy($$.name, $1.name);
+          sprintf($$.type, "float");
           $$.nd = mknode(NULL, NULL, $1.name);
        }
        | STRING_LITERAL     
        {
           sizeList++;
+          strcpy($$.name, $1.name);
+          sprintf($$.type, "string");
           $$.nd = mknode(NULL, NULL, $1.name);
        }
        | TRUE               
        {
           sizeList++;
+          strcpy($$.name, $1.name);
+          sprintf($$.type, "bool");
           $$.nd = mknode(NULL, NULL, $1.name);
        }
        | FALSE              
        {
           sizeList++;
+          strcpy($$.name, $1.name);
+          sprintf($$.type, "bool");
           $$.nd = mknode(NULL, NULL, $1.name);
        }
-       | func_call          
+       | func_call
        {
           sizeList++;
+          strcpy($$.name, $1.name);
+          strcpy($$.type, $1.type);
           $$.nd = mknode($1.nd, NULL, "func-call");
        }
        | LPAREN expr RPAREN 
        {
           sizeList++;
+          strcpy($$.name, $2.name);
+          strcpy($$.type, $2.type);
           $$.nd = mknode($2.nd, NULL, "expr");
        }
        | expr PLUS expr     
        {
           sizeList++;
+          check_types_expr($1.type, $3.type, $2.name);
           $$.nd = mknode($1.nd, $3.nd, $2.name);
        }
        | expr MINUS expr    
        {
           sizeList++;
+          check_types_expr($1.type, $3.type, $2.name);
           $$.nd = mknode($1.nd, $3.nd, $2.name);
        }
        | expr MULT expr     
        {
           sizeList++;
+          check_types_expr($1.type, $3.type, $2.name);
           $$.nd = mknode($1.nd, $3.nd, $2.name);
        }
        | expr DIVIDE expr   
        {
           sizeList++;
+          check_types_expr($1.type, $3.type, $2.name);
           $$.nd = mknode($1.nd, $3.nd, $2.name);
        }
        | expr MODULE expr   
        {
           sizeList++;
+          check_types_expr($1.type, $3.type, $2.name);
           $$.nd = mknode($1.nd, $3.nd, $2.name);
+       }
+       | LPAREN type RPAREN expr %prec CAST
+       {
+          sizeList++;
+          strcpy($$.name, $4.name);
+          strcpy($$.type, $2.name);
+          $$.nd = mknode($2.nd, $4.nd, "cast");
        }
        ;
 
 num_expr : ID
            { 
-              check_undeclared($1.name);
-              $$.nd = mknode(NULL, NULL, $1.name);
+                strcpy($$.name, $1.name);
+                char *id_type = get_symbol_datatype($1.name);
+                strcpy($$.type, id_type);
+                $$.nd = mknode(NULL, NULL, $1.name);
            }
            | INT_NUMBER
            {
-              $$.nd = mknode(NULL, NULL, $1.name);
+                strcpy($$.name, $1.name);
+                sprintf($$.type, "int");
+                $$.nd = mknode(NULL, NULL, $1.name);
            }
            | LPAREN num_expr RPAREN
            {
-              $$.nd = mknode($2.nd, NULL, "num-expr");
+                strcpy($$.name, $2.name);
+                strcpy($$.type, $2.type);
+                $$.nd = mknode($2.nd, NULL, "num-expr");
            }
            | num_expr PLUS num_expr
            {
-              $$.nd = mknode($1.nd, $3.nd, $2.name);
+                check_types_expr($1.type, $3.type, $2.name);
+                $$.nd = mknode($1.nd, $3.nd, $2.name);
            }
            | num_expr MINUS num_expr
            {
-              $$.nd = mknode($1.nd, $3.nd, $2.name);
+                check_types_expr($1.type, $3.type, $2.name);
+                $$.nd = mknode($1.nd, $3.nd, $2.name);
            }
            | num_expr MULT num_expr
            {
-              $$.nd = mknode($1.nd, $3.nd, $2.name);
+                check_types_expr($1.type, $3.type, $2.name);
+                $$.nd = mknode($1.nd, $3.nd, $2.name);
            }
            | num_expr DIVIDE num_expr
            {
-              $$.nd = mknode($1.nd, $3.nd, $2.name);
+                check_types_expr($1.type, $3.type, $2.name);
+                $$.nd = mknode($1.nd, $3.nd, $2.name);
            }
            | num_expr MODULE num_expr
            {
-              $$.nd = mknode($1.nd, $3.nd, $2.name);
+                check_types_expr($1.type, $3.type, $2.name);
+                $$.nd = mknode($1.nd, $3.nd, $2.name);
+           }
+           | LPAREN type RPAREN expr %prec CAST
+           {
+               sizeList++;
+               strcpy($$.name, $4.name);
+               strcpy($$.type, $2.name);
+               $$.nd = mknode($2.nd, $4.nd, "cast");
            }
            ; 
 
@@ -579,10 +667,10 @@ for_args : assign_stmt SEMI_COLON ID comp_op ID SEMI_COLON inc_dec
          }
          ;
 
-inc_dec : ID INCREMENT { check_undeclared($1.name); }
-        | ID DECREMENT { check_undeclared($1.name); }
-        | INCREMENT ID { check_undeclared($2.name); }
-        | DECREMENT ID { check_undeclared($2.name); }
+inc_dec : ID INCREMENT %prec POSINC { check_undeclared($1.name); }
+        | ID DECREMENT %prec POSDEC { check_undeclared($1.name); }
+        | INCREMENT ID %prec PREINC { check_undeclared($2.name); }
+        | DECREMENT ID %prec PREDEC { check_undeclared($2.name); }
         ;
 
 print_stmt : PRINT LPAREN expr RPAREN
@@ -713,7 +801,7 @@ int main (int argc, char *argv[]) {
                 break;
 
             case '?':
-                printf("Error! Try \"%s --help\" for more information.\n", argv[0]);
+                printf("error! try \"%s --help\" for more information.\n", argv[0]);
                 exit(0);
                 break;
 
@@ -729,7 +817,7 @@ int main (int argc, char *argv[]) {
     }
 
     if(!hasInputOpt && argc == 1) {
-         printf("%s: Fatal Error! No input files\n", argv[0]);
+         printf("%s: fatal error! no input files\n", argv[0]);
          exit(0);
     }
 
@@ -780,11 +868,85 @@ void print_preorder(struct node *tree) {
     printf("]");
 }
 
+char *get_array_datatype(char *id) {
+    char * string = strdup(id);
+    char * type = strtok(string, "[");
+    return type;
+}
+
+char *get_symbol_datatype(char *id) {
+    struct bucket *symbol = check_undeclared(id);
+    return symbol->datatype;
+}
+
+void *set_symbol_datatype(char *id, char *type) {
+    struct bucket *symbol = check_undeclared(id);
+    strcpy(symbol->datatype, type);
+}
+
+int check_types(char *type1, char *type2) {
+    char *t1 = get_array_datatype(type1);
+    char *t2 = get_array_datatype(type2);
+    
+    if(!strcmp(t2, t1)) return SAME_TYPES; 
+    if(!strcmp(t2, "int") && !strcmp(t1, "float")) return INT_TO_FLOAT;
+    if(!strcmp(t2, "int") && !strcmp(t1, "double")) return INT_TO_DOUBLE;
+    if(!strcmp(t2, "int") && !strcmp(t1, "string")) return INT_TO_STRING;
+    if(!strcmp(t2, "float") && !strcmp(t1, "int")) return FLOAT_TO_INT;
+    if(!strcmp(t2, "float") && !strcmp(t1, "double")) return FLOAT_TO_DOUBLE;
+    if(!strcmp(t2, "float") && !strcmp(t1, "string")) return FLOAT_TO_STRING;
+    if(!strcmp(t2, "double") && !strcmp(t1, "int")) return DOUBLE_TO_INT;
+    if(!strcmp(t2, "double") && !strcmp(t1, "float")) return DOUBLE_TO_FLOAT;
+    if(!strcmp(t2, "double") && !strcmp(t1, "string")) return DOUBLE_TO_STRING;
+    if(!strcmp(t2, "string") && !strcmp(t1, "int")) return STRING_TO_INT;
+    if(!strcmp(t2, "string") && !strcmp(t1, "float")) return STRING_TO_FLOAT;
+    if(!strcmp(t2, "string") && !strcmp(t1, "double")) return STRING_TO_DOUBLE;
+}
+
+int check_types_expr(char *type1, char *type2, char *operand) {
+
+    int c = check_types(type1, type2);
+
+    switch(c) {
+        case SAME_TYPES: return SAME_TYPES;
+        case INT_TO_FLOAT: return INT_TO_FLOAT;
+        case INT_TO_DOUBLE: return INT_TO_DOUBLE;
+        case FLOAT_TO_DOUBLE: return FLOAT_TO_DOUBLE;
+        /* case INT_TO_STRING: return INT_TO_STRING;
+        case FLOAT_TO_STRING: return FLOAT_TO_STRING;
+        case DOUBLE_TO_STRING: return DOUBLE_TO_STRING; */
+    }
+
+    printf("%s%stype error:%s unsupported operand type for '%s': '%s' and '%s' at line %d\n", RED, BOLD, RESET, operand, type1, type2, yylineno);
+    /* exit(0); */
+    return 0;
+}
+
+int check_types_assign(char *type1, char *type2, char *id) {
+
+    int c = check_types(type1, type2);
+
+    switch(c) {
+        case SAME_TYPES: return SAME_TYPES;
+        case INT_TO_FLOAT: return INT_TO_FLOAT;
+        case INT_TO_DOUBLE: return INT_TO_DOUBLE;
+        case FLOAT_TO_DOUBLE: return FLOAT_TO_DOUBLE;
+        /* case INT_TO_STRING: return INT_TO_STRING;
+        case FLOAT_TO_STRING: return FLOAT_TO_STRING;
+        case DOUBLE_TO_STRING: return DOUBLE_TO_STRING; */
+    }
+
+    printf("%s%stype error:%s '%s' is a %s object and does not suport '%s' assignment at line %d\n", RED, BOLD, RESET, id, type1, type2, yylineno);
+    /* exit(0); */
+    return 0;
+}
+
 bucket *check_undeclared(char *id) {
     
     struct bucket *symbol;
     struct stack_bucket *sb = scopes->head;
 
+    // Se não encontra no escopo atual, busca no próximo
     while (sb != NULL)
     {
         sprintf(buffer, "%s@%s", sb->text, id);
@@ -797,8 +959,8 @@ bucket *check_undeclared(char *id) {
     }
 
     if(symbol == NULL) {
-        printf("%s%sError:%s '%s' undeclared at line %d\n", RED, BOLD, RESET, id, yylineno);
-        /* exit(0); */
+        printf("%s%serror:%s '%s' undeclared at line %d\n", RED, BOLD, RESET, id, yylineno);
+        exit(0);
     }     
     return symbol;
 }
@@ -811,20 +973,20 @@ void check_declaration(char *id) {
     token = strtok(NULL, "@");
 
     if(symbol != NULL) {
-        printf("%s%sError:%s multiple declaration of '%s' at line %d\n", RED, BOLD, RESET, token, yylineno);
+        printf("%s%serror:%s multiple declaration of '%s' at line %d\n", RED, BOLD, RESET, token, yylineno);
         /* exit(0); */
     }     
 }
 
-char *insert_key(char *id) {
+char *insert_key(char *id, char *type) {
     sprintf(buffer, "%s@%s", top(scopes), id);
     check_declaration(buffer);
-    insert(buffer,"",auxType,yylineno);
+    insert(buffer, auxType, type, yylineno);
     return buffer;
 }
 
 void yyerror(char *msg) {
-    fprintf (stderr, "%d: %s at '%s'\n", yylineno, msg, yytext);
+    fprintf (stderr, "%s%s%s:%s '%s' at line %d\n", RED, BOLD, msg, RESET, yytext, yylineno);
     exit(1);
 }
 
@@ -847,3 +1009,4 @@ void print_help(char *compilername) {
     printf("\t\tdisplay this help and exit\n\n");
     exit(1);
 }
+
