@@ -30,14 +30,16 @@ int sizeList = 0;
 enum typecasting {
     SAME_TYPES,
     INT_TO_FLOAT,
-    FLOAT_TO_INT,
-    DOUBLE_TO_FLOAT,
-    FLOAT_TO_DOUBLE,
+    INT_TO_DOUBLE,
     INT_TO_STRING,
-    STRING_TO_INT,
+    FLOAT_TO_INT,
+    FLOAT_TO_DOUBLE,
     FLOAT_TO_STRING,
-    STRING_TO_FLOAT,
+    DOUBLE_TO_INT,
+    DOUBLE_TO_FLOAT,
     DOUBLE_TO_STRING,
+    STRING_TO_INT,
+    STRING_TO_FLOAT,
     STRING_TO_DOUBLE
 };
 
@@ -866,6 +868,12 @@ void print_preorder(struct node *tree) {
     printf("]");
 }
 
+char *get_array_datatype(char *id) {
+    char * string = strdup(id);
+    char * type = strtok(string, "[");
+    return type;
+}
+
 char *get_symbol_datatype(char *id) {
     struct bucket *symbol = check_undeclared(id);
     return symbol->datatype;
@@ -877,16 +885,22 @@ void *set_symbol_datatype(char *id, char *type) {
 }
 
 int check_types(char *type1, char *type2) {
-    if(!strcmp(type2, type1)) return SAME_TYPES; 
-    if(!strcmp(type2, "int") && !strcmp(type1, "float")) return INT_TO_FLOAT;
-    if(!strcmp(type2, "float") && !strcmp(type1, "int")) return FLOAT_TO_INT;
-    if(!strcmp(type2, "double") && !strcmp(type1, "float")) return DOUBLE_TO_FLOAT;
-    if(!strcmp(type2, "float") && !strcmp(type1, "double")) return FLOAT_TO_DOUBLE;
-    if(!strcmp(type2, "int") && !strcmp(type1, "string")) return INT_TO_STRING;
-    if(!strcmp(type2, "string") && !strcmp(type1, "int")) return STRING_TO_INT;
-    if(!strcmp(type2, "float") && !strcmp(type1, "string")) return FLOAT_TO_STRING;
-    if(!strcmp(type2, "string") && !strcmp(type1, "float")) return STRING_TO_FLOAT;
-    if(!strcmp(type2, "double") && !strcmp(type1, "string")) return DOUBLE_TO_STRING;
+    char *t1 = get_array_datatype(type1);
+    char *t2 = get_array_datatype(type2);
+    
+    if(!strcmp(t2, t1)) return SAME_TYPES; 
+    if(!strcmp(t2, "int") && !strcmp(t1, "float")) return INT_TO_FLOAT;
+    if(!strcmp(t2, "int") && !strcmp(t1, "double")) return INT_TO_DOUBLE;
+    if(!strcmp(t2, "int") && !strcmp(t1, "string")) return INT_TO_STRING;
+    if(!strcmp(t2, "float") && !strcmp(t1, "int")) return FLOAT_TO_INT;
+    if(!strcmp(t2, "float") && !strcmp(t1, "double")) return FLOAT_TO_DOUBLE;
+    if(!strcmp(t2, "float") && !strcmp(t1, "string")) return FLOAT_TO_STRING;
+    if(!strcmp(t2, "double") && !strcmp(t1, "int")) return DOUBLE_TO_INT;
+    if(!strcmp(t2, "double") && !strcmp(t1, "float")) return DOUBLE_TO_FLOAT;
+    if(!strcmp(t2, "double") && !strcmp(t1, "string")) return DOUBLE_TO_STRING;
+    if(!strcmp(t2, "string") && !strcmp(t1, "int")) return STRING_TO_INT;
+    if(!strcmp(t2, "string") && !strcmp(t1, "float")) return STRING_TO_FLOAT;
+    if(!strcmp(t2, "string") && !strcmp(t1, "double")) return STRING_TO_DOUBLE;
 }
 
 int check_types_expr(char *type1, char *type2, char *operand) {
@@ -896,7 +910,11 @@ int check_types_expr(char *type1, char *type2, char *operand) {
     switch(c) {
         case SAME_TYPES: return SAME_TYPES;
         case INT_TO_FLOAT: return INT_TO_FLOAT;
+        case INT_TO_DOUBLE: return INT_TO_DOUBLE;
         case FLOAT_TO_DOUBLE: return FLOAT_TO_DOUBLE;
+        /* case INT_TO_STRING: return INT_TO_STRING;
+        case FLOAT_TO_STRING: return FLOAT_TO_STRING;
+        case DOUBLE_TO_STRING: return DOUBLE_TO_STRING; */
     }
 
     printf("%s%stype error:%s unsupported operand type for '%s': '%s' and '%s' at line %d\n", RED, BOLD, RESET, operand, type1, type2, yylineno);
@@ -911,7 +929,11 @@ int check_types_assign(char *type1, char *type2, char *id) {
     switch(c) {
         case SAME_TYPES: return SAME_TYPES;
         case INT_TO_FLOAT: return INT_TO_FLOAT;
+        case INT_TO_DOUBLE: return INT_TO_DOUBLE;
         case FLOAT_TO_DOUBLE: return FLOAT_TO_DOUBLE;
+        /* case INT_TO_STRING: return INT_TO_STRING;
+        case FLOAT_TO_STRING: return FLOAT_TO_STRING;
+        case DOUBLE_TO_STRING: return DOUBLE_TO_STRING; */
     }
 
     printf("%s%stype error:%s '%s' is a %s object and does not suport '%s' assignment at line %d\n", RED, BOLD, RESET, id, type1, type2, yylineno);
