@@ -10,6 +10,7 @@ typedef struct bucket {
     char text[SIZE_TEXT];
     char datatype[40];
     char type[40];
+    char value[40];
     linenumber_bucket *lineslist;
     struct bucket *next;
 } bucket;

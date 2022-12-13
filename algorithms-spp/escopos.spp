@@ -1,14 +1,26 @@
-int[] z = {2,3,4,5,6};
+//int[] z = {2,3,4,5,6};
 
-int[] ids = 2;
+//int[] ids = 2;
 
 int a;
 
-int[2][2][2] x;
+int count = 17; 
+
+bool verdade = true;
+
+string carro = "bmw" + 2;
+
+string comida = "lasanha" + "arroz";
+
+//int[2][2][2] x;
 
 int b,c,d=0;
 
-int y = (1+2) * 3;
+int soma = 2 + 2;
+
+double soma2 = 3.0 + 3.0;
+
+//int y = (1+2) * 3;
 
 function main(int b, int c) : int {
 
@@ -19,7 +31,7 @@ function main(int b, int c) : int {
     a = 0;
     int z;
     a += 3;
-    if (a < 2) {
+    if (a == 3) {
         int b = 1;
         int d = 0;
         int z = 1;
@@ -27,10 +39,8 @@ function main(int b, int c) : int {
         a = 1;
     }
     print(a);
-    float o = 1.5;
-    double x = 1.5;
 
-    a = (int) o + (int) x;
+    //a = (int) a + (int) x;
     
 }
 

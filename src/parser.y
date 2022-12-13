@@ -5,6 +5,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <regex.h>
+#include <sys/types.h>
 #define RESET "\x1B[0m"
 #define BOLD "\x1B[1m"  
 #define RED "\x1B[31m"  
@@ -57,6 +59,9 @@ typedef union Value{
     char *sValue; /* string value  */
 } Value;
 
+int Round(double number);
+void RemoveChars(char *s, char c);
+void insert_value(char* id, char* value);
 void print_tree(struct node*);
 void print_preorder(struct node *);
 struct node* mknode(struct node *left, struct node *right, char *token);
@@ -251,6 +256,7 @@ ids : ID assign_op LBRACE expr_list RBRACE
           check_types_assign(id_type, $3.type, $1.name);
           struct node *temp = mknode(NULL, NULL, $1.name);
 	      $$.nd = mknode(temp, $3.nd, $2.name);
+          insert_value($1.name, $3.symbol->value);
       }
       | ids COMMA ID
       {
@@ -450,6 +456,7 @@ assign_stmt : ID dimen_ind_op assign_op expr
                  struct node *aux = mknode(NULL,NULL,$1.name);
                  $3.nd = mknode(aux, $4.nd, $3.name);
                  $$.nd = mknode($3.nd, NULL, "assign-op");
+                 insert_value($1.name, $4.symbol->value);
                  //$$.nd = mknode($3.nd, temp, "assign-op");
               }
               ;
@@ -483,10 +490,15 @@ expr : ID dimen_ind_op
           char *id_type = get_symbol_datatype($1.name);
           strcpy($$.type, id_type);
           $$.nd = mknode($2.nd, NULL, $1.name);
+          $$.symbol = malloc(sizeof(struct bucket));
+          struct bucket *b = check_undeclared($1.name);
+          strcpy($$.symbol->value,b->value);
        }
        | INT_NUMBER         
        {
           sizeList++;
+          $$.symbol = malloc(sizeof(struct bucket));
+          strcpy($$.symbol->value,$1.name);
           strcpy($$.name, $1.name);
           sprintf($$.type, "int");
           $$.nd = mknode(NULL, NULL, $1.name);
@@ -494,13 +506,17 @@ expr : ID dimen_ind_op
        | DOUBLE_NUMBER      
        {
           sizeList++;
+          $$.symbol = malloc(sizeof(struct bucket));
+          strcpy($$.symbol->value,$1.name);
           strcpy($$.name, $1.name);
-          sprintf($$.type, "float");
+          sprintf($$.type, "double");
           $$.nd = mknode(NULL, NULL, $1.name);
        }
        | STRING_LITERAL     
        {
           sizeList++;
+          $$.symbol = malloc(sizeof(struct bucket));
+          strcpy($$.symbol->value,$1.name);
           strcpy($$.name, $1.name);
           sprintf($$.type, "string");
           $$.nd = mknode(NULL, NULL, $1.name);
@@ -508,6 +524,8 @@ expr : ID dimen_ind_op
        | TRUE               
        {
           sizeList++;
+          $$.symbol = malloc(sizeof(struct bucket));
+          strcpy($$.symbol->value,$1.name);
           strcpy($$.name, $1.name);
           sprintf($$.type, "bool");
           $$.nd = mknode(NULL, NULL, $1.name);
@@ -515,6 +533,8 @@ expr : ID dimen_ind_op
        | FALSE              
        {
           sizeList++;
+          $$.symbol = malloc(sizeof(struct bucket));
+          strcpy($$.symbol->value,$1.name);
           strcpy($$.name, $1.name);
           sprintf($$.type, "bool");
           $$.nd = mknode(NULL, NULL, $1.name);
@@ -537,6 +557,26 @@ expr : ID dimen_ind_op
        {
           sizeList++;
           check_types_expr($1.type, $3.type, $2.name);
+          
+          if(!strcmp($1.type,"int")){
+            int temp1 = atoi($1.symbol->value);
+            int temp2 = atoi($3.symbol->value);
+            int result = temp1 + temp2;
+            char resultTemp[40] = "";
+            sprintf(resultTemp, "%d", result);
+            strcpy($$.symbol->value,resultTemp);
+          }else if(!strcmp($1.type,"double")){
+            double temp1 = atof($1.symbol->value);
+            double temp2 = atof($3.symbol->value);
+            double result = temp1 + temp2;
+            char resultTemp[40];
+            sprintf(resultTemp, "%f", result);
+            strcpy($$.symbol->value,resultTemp);
+          }else if(!strcmp($1.type,"string")){
+            strcat($1.symbol->value,$3.symbol->value);
+            printf("String Concatenada -> %s\n", $1.symbol->value);
+            strcpy($$.symbol->value,$1.symbol->value);
+          }
           $$.nd = mknode($1.nd, $3.nd, $2.name);
        }
        | expr MINUS expr    
@@ -566,6 +606,49 @@ expr : ID dimen_ind_op
        | LPAREN type RPAREN expr %prec CAST
        {
           sizeList++;
+          
+          if(check_types($2.name,$4.type) == DOUBLE_TO_INT) {
+            $$.symbol = malloc(sizeof(struct bucket));
+            double tempDouble = atof($4.symbol->value);
+            int tempInt = Round(tempDouble);
+            sprintf($$.symbol->value, "%d", tempInt);
+          }else if(check_types($2.name,$4.type) == INT_TO_STRING){
+            $$.symbol = malloc(sizeof(struct bucket));
+            strcpy($$.symbol->value,$4.symbol->value);
+          }else if(check_types($2.name,$4.type) == DOUBLE_TO_STRING){
+            $$.symbol = malloc(sizeof(struct bucket));
+            strcpy($$.symbol->value,$4.symbol->value);
+          }else if(check_types($2.name,$4.type) == INT_TO_DOUBLE){
+            $$.symbol = malloc(sizeof(struct bucket));
+            int tempInt = atoi($4.symbol->value);
+            double tempDouble = (double) tempInt;
+            sprintf($$.symbol->value, "%f", tempDouble);
+          }else if(check_types($2.name,$4.type) == STRING_TO_INT){
+            $$.symbol = malloc(sizeof(struct bucket));
+            regex_t er;
+            int reter;
+            reter = regcomp(&er,"^([0-9])+$",REG_EXTENDED | REG_NEWLINE);
+            reter = regexec(&er,$4.symbol->value,0,NULL,0);
+            if(!reter){
+                strcpy($$.symbol->value,$4.symbol->value);
+            }else{
+                printf("%s%scasting error:%s the string doens't match with integer's regex : at line %d\n", RED, BOLD, RESET, yylineno);
+            }
+            regfree(&er);
+          }else if(check_types($2.name,$4.type) == STRING_TO_DOUBLE){
+            $$.symbol = malloc(sizeof(struct bucket));
+            regex_t er;
+            int reter;
+            reter = regcomp(&er,"^([0-9]+)(\\.[0-9]+)?$|^\\.?[0-9]+$",REG_EXTENDED | REG_NEWLINE);
+            reter = regexec(&er,$4.symbol->value,0,NULL,0);
+            if(!reter){
+                strcpy($$.symbol->value,$4.symbol->value);
+            }else{
+                printf("%s%scasting error:%s the string doens't match with double's regex : at line %d\n", RED, BOLD, RESET, yylineno);
+            }
+            regfree(&er);
+          }
+
           strcpy($$.name, $4.name);
           strcpy($$.type, $2.name);
           $$.nd = mknode($2.nd, $4.nd, "cast");
@@ -842,6 +925,23 @@ struct node* mknode(struct node *left, struct node *right, char *token) {
     return(newnode);
 }
 
+void RemoveChars(char *s, char c)
+{
+    int writer = 0, reader = 0;
+
+    while (s[reader])
+    {
+        if (s[reader]!=c) 
+        {   
+            s[writer++] = s[reader];
+        }
+
+        reader++;       
+    }
+
+    s[writer]=0;
+}
+
 struct bucket* mkbucket(){
 
 }
@@ -884,6 +984,11 @@ void *set_symbol_datatype(char *id, char *type) {
     strcpy(symbol->datatype, type);
 }
 
+int Round(double number)
+{
+    return (number >= 0) ? (int)(number + 0.5) : (int)(number - 0.5);
+}
+
 int check_types(char *type1, char *type2) {
     char *t1 = get_array_datatype(type1);
     char *t2 = get_array_datatype(type2);
@@ -907,14 +1012,16 @@ int check_types_expr(char *type1, char *type2, char *operand) {
 
     int c = check_types(type1, type2);
 
-    switch(c) {
-        case SAME_TYPES: return SAME_TYPES;
-        case INT_TO_FLOAT: return INT_TO_FLOAT;
-        case INT_TO_DOUBLE: return INT_TO_DOUBLE;
-        case FLOAT_TO_DOUBLE: return FLOAT_TO_DOUBLE;
-        /* case INT_TO_STRING: return INT_TO_STRING;
-        case FLOAT_TO_STRING: return FLOAT_TO_STRING;
-        case DOUBLE_TO_STRING: return DOUBLE_TO_STRING; */
+    if(strcmp(type1,"bool")){
+        switch(c) {
+            case SAME_TYPES: return SAME_TYPES;
+            case INT_TO_FLOAT: return INT_TO_FLOAT;
+            case INT_TO_DOUBLE: return INT_TO_DOUBLE;
+            case FLOAT_TO_DOUBLE: return FLOAT_TO_DOUBLE;
+            /* case INT_TO_STRING: return INT_TO_STRING;
+            case FLOAT_TO_STRING: return FLOAT_TO_STRING;
+            case DOUBLE_TO_STRING: return DOUBLE_TO_STRING; */
+        }
     }
 
     printf("%s%stype error:%s unsupported operand type for '%s': '%s' and '%s' at line %d\n", RED, BOLD, RESET, operand, type1, type2, yylineno);
@@ -976,6 +1083,11 @@ void check_declaration(char *id) {
         printf("%s%serror:%s multiple declaration of '%s' at line %d\n", RED, BOLD, RESET, token, yylineno);
         /* exit(0); */
     }     
+}
+
+void insert_value(char* id, char* value){
+    struct bucket* symbol = check_undeclared(id);
+    strcpy(symbol->value,value);
 }
 
 char *insert_key(char *id, char *type) {

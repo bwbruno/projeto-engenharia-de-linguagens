@@ -73,8 +73,8 @@ void insert_linenumber(char *text, char *datatype, char *type, int linenumber)
 void print_symboltable()
 {
     printf("\n");
-    printf("Scope@Id   Datatype  Type      Line Numbers\n");
-    printf("---------- -------- --------- -----------------\n");
+    printf("Scope@Id   Datatype  Type     Value  Line Numbers\n");
+    printf("---------- -------- --------- ------ -----------------\n");
 
     for (int i = 0; i < SIZE; ++i)
     {
@@ -88,7 +88,7 @@ void print_symboltable()
                 printf("%-10s ", b->text);
                 printf("%-8s ", b->datatype);
                 printf("%-9s ", b->type);
-
+                printf("%-6s", b->value);
                 while (t != NULL)
                 {
                     printf("%d ", t->line);
@@ -109,8 +109,8 @@ void dump_symboltable(char *filename)
     printf("Generating '%s' symbol table log... ", filename);
     FILE *file = fopen(filename, "w");
     fprintf(file, "\n");
-    fprintf(file, "Scope@Id                  Datatype        Type           Line Numbers\n");
-    fprintf(file, "------------------------- --------------- -------------- -----------------\n");
+    fprintf(file, "Scope@Id                  Datatype        Type           Value Line Numbers\n");
+    fprintf(file, "------------------------- --------------- -------------- ----- -----------------\n");
 
     for (int i = 0; i < SIZE; ++i)
     {
@@ -124,7 +124,8 @@ void dump_symboltable(char *filename)
                 fprintf(file, "%-25s ", b->text);
                 fprintf(file, "%-15s ", b->datatype);
                 fprintf(file, "%-14s ", b->type);
-
+                fprintf(file, "%-5s", b->value);
+                 
                 while (t != NULL)
                 {
                     fprintf(file, "%d ", t->line);

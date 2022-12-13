@@ -14,7 +14,7 @@ FILE_SYMBOLTABLE=$(DIR_LOGS)/$(@:test-%=%)/$(@:test-%=%)-symboltable.dump
 #OPTIONS=-p
 OPTIONS=--dump-stack=$(FILE_STACK) -t $(FILE_SYMBOLTABLE)
 
-ALGORITHMS=test-generico test-problema1 test-problema2 test-problema3 test-mergeSort test-switchCase test-escopos
+ALGORITHMS=test-generico test-problema1 test-problema2 test-problema3 test-mergeSort test-switchCase test-escopos test-cast
 BROKEN_ALGORITHMS=test-broken-multipleDeclarations test-broken-undeclared test-broken-typeErrorOnExpression test-broken-typeErrorOnAssignment
 
 build:

@@ -1,15 +1,15 @@
 %option noyywrap
-/* 
- * Analisador léxico da linguagem Simple++ 
- * Description: Count the number of characters and the number of lines 
+/*
+ * Analisador léxico da linguagem Simple++
+ * Description: Count the number of characters and the number of lines
  *              from standard input
  * Usage: (1) $ flex lex.l
- *        (2) $ gcc lex.yy.c 
+ *        (2) $ gcc lex.yy.c
  *        (3) $ ./a.out < mergeSort.txt
  */
 
 %{
-#include <stdio.h>  
+#include <stdio.h>
 #include <string.h>
 #include "stack.h"
 #include "symboltable.h"
@@ -18,7 +18,7 @@ char *fileStack = NULL;
 char *fileSymbolTable = NULL;
 struct stack *scopes;
 int line = 1;
-
+void RemoveChars(char *s, char c);
 %}
 
 %option yylineno
@@ -26,7 +26,7 @@ int line = 1;
 %%
 
 \/\/.*                  ;
-\/\*(.*\n)*.*\*\/       ; 
+\/\*(.*\n)*.*\*\/       ;
 [ \t]                   ;
 [\n]                    {
                            if(fileStack) {
@@ -63,7 +63,6 @@ int line = 1;
 "default"               { strcpy(yylval.nd_obj.name,(yytext)); return DEFAULT; }
 "print"                 { strcpy(yylval.nd_obj.name,(yytext)); return PRINT; }
 "scan"                  { strcpy(yylval.nd_obj.name,(yytext)); return SCAN; }
-([\"].*?[\"])           { strcpy(yylval.nd_obj.name,(yytext)); return STRING_LITERAL; }   
 "printArray"            { strcpy(yylval.nd_obj.name,(yytext)); return PRINT_ARRAY; }
 "true"                  { strcpy(yylval.nd_obj.name,(yytext)); return TRUE; }
 "false"                 { strcpy(yylval.nd_obj.name,(yytext)); return FALSE; }
@@ -103,6 +102,10 @@ int line = 1;
 "|"                     { strcpy(yylval.nd_obj.name,(yytext)); return OR; }
 "!"                     { strcpy(yylval.nd_obj.name,(yytext)); return NOT; }
 
+\"(\\.|[^"\\])*\"           { 
+                              RemoveChars(yytext, '\"');
+                              strcpy(yylval.nd_obj.name,(yytext)); return STRING_LITERAL;
+                            }
 
 [a-zA-Z][a-zA-Z0-9_]*   { strcpy(yylval.nd_obj.name,(yytext)); return ID; }
 
