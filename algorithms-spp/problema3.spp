@@ -27,7 +27,7 @@ function main() : int
 
     for(int i = 0; i < linhasA ; i++){
         for(int j = 0 ; j < colunasA ; j++){
-            print(matrizA[i][j] + " ");
+            print((string) matrizA[i][j] + " ");
         }
         if(i != linhasA - 1){
             print("\n\t");
@@ -59,7 +59,7 @@ function main() : int
 
     for(int i = 0; i < linhasB ; i++){
         for(int j = 0 ; j < colunasB ; j++){
-            print(matrizB[i][j] + " ");
+            print((string) matrizB[i][j] + " ");
         }
         if(i != linhasB - 1){
             print("\n\t");
@@ -74,9 +74,9 @@ function main() : int
         print("Não é possível realizar a soma das matrizes A e B\n");
     }else{
         print("Soma das Matrizes:\n\t");
-        for(int i = 0; i < linhasA ; i++){
+          for(int i = 0; i < linhasA ; i++){
             for(int j = 0 ; j < colunasA ; j++){
-                print((matrizA[i][j] + matrizB[i][j]) + " ");
+               print((string)(matrizA[i][j] + matrizB[i][j]) + " ");
             }
             if(i != linhasA - 1){
                 print("\n\t");
@@ -86,27 +86,27 @@ function main() : int
         }
     }
 
-    if(colunasA != linhasB){
-        print("Não é possível realizar a multiplicação das matrizes A e B\n");
-    }else{
-        print("Multiplicação das Matrizes:\n\t");
-        int[linhasA][colunasB] matrizC;
-        int somaprod=0;
-        for(int i=0; i<linhasA; i++){
-            for(int j=0; j<colunasB; j++){
-                somaprod=0;
-                for(int k=0; k<linhasA; k++){
-                    somaprod+= matrizA[i][k]*matrizB[k][j];
-                }
-                print(somaprod + " ");
-            }
-            if(i != linhasA - 1){
-                print("\n\t");
-            }else{
-                print("\n");
-            }
-        }
-    }
-
+    //if(colunasA != linhasB){
+    //    print("Não é possível realizar a multiplicação das matrizes A e B\n");
+    //}else{
+    //    print("Multiplicação das Matrizes:\n\t");
+    //    int[linhasA][colunasB] matrizC;
+    //    int somaprod=0;
+    //    for(int i=0; i<linhasA; i++){
+    //        for(int j=0; j<colunasB; j++){
+    //            somaprod=0;
+    //            for(int k=0; k<linhasA; k++){
+    //                somaprod+= matrizA[i][k]*matrizB[k][j];
+    //            }
+    //            print((string)somaprod + " ");
+    //        }
+    //        if(i != linhasA - 1){
+    //            print("\n\t");
+    //        }else{
+    //            print("\n");
+    //        }
+    //    }
+    //}
+    //
     return 0;
 }

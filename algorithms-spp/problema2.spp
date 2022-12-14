@@ -29,10 +29,10 @@ function main() : int
     } while(input >= 0); 
     
     print("\n");
-    print("  [0, 25]: " + i0_25);
-    print(" [26, 50]: " + i26_50);
-    print(" [51, 75]: " + i51_75);
-    print("[76, 100]: " + i76_100);
+    print("  [0, 25]: " + (string) i0_25);
+    print(" [26, 50]: " + (string) i26_50);
+    print(" [51, 75]: " + (string) i51_75);
+    print("[76, 100]: " + (string) i76_100);
 
     return 0;
 }
