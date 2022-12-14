@@ -3,48 +3,11 @@
 //int[] ids = 2;
 
 int a;
+int b;
+int c, d, e;
 
-int count = 17; 
-
-bool verdade = true;
-
-string carro = "bmw" + 2;
-
-string comida = "lasanha" + "arroz";
-
-//int[2][2][2] x;
-
-int b,c,d=0;
-
-int soma = 2 + 2;
-
-double soma2 = 3.0 + 3.0;
-
-//int y = (1+2) * 3;
+int o = 1;
 
 function main(int b, int c) : int {
-
-    while (true) {
-        print("oi");
-    }
-
-    a = 0;
-    int z;
-    a += 3;
-    if (a == 3) {
-        int b = 1;
-        int d = 0;
-        int z = 1;
-    } else {
-        a = 1;
-    }
     print(a);
-
-    //a = (int) a + (int) x;
-    
-}
-
-function merge() : float {
-    int a = 1;
-    int b = 0;
 }

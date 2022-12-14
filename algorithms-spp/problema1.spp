@@ -1,10 +1,9 @@
-function main() : int
+function main(int a) : int
 {
     double x = 10.5;
     double y = 25.5;
     int c = 20;
-    
-    print(x*x-y+c);
+    double r = x*x-y+c;
 
-    return 0;
+    print((string) r);
 }

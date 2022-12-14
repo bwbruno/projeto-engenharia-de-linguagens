@@ -1,24 +1,13 @@
 
 Scope@Id                  Datatype        Type           Value Line Numbers
 ------------------------- --------------- -------------- ----- -----------------
-0@main                    int             function            25 
-0@merge                   float           function            47 
-0@soma2                   double          variable       6.00000021 
-0@carro                   string          variable       bmw2 11 
-0@a                       int             variable       1    5 
-0@b                       int             variable            17 
-0@c                       int             variable            17 
-0@d                       int             variable            17 
-0@count                   int             variable       17   7 
-5@a                       int             variable       1    48 
-5@b                       int             variable       0    49 
-3@b                       int             variable       1    35 
-3@d                       int             variable       0    36 
-1@b                       int             variable            25 
-1@c                       int             variable            25 
-3@z                       int             variable       1    37 
-0@comida                  string          variable       lasanhaarroz13 
-1@z                       int             variable            32 
-0@verdade                 bool            variable       true 9 
-0@soma                    int             variable       4    19 
+0@main                    int             function            11 
+0@a                       int             variable            5 
+0@b                       int             variable            6 
+0@c                       int             variable            7 
+0@d                       int             variable            7 
+0@e                       int             variable            7 
+0@o                       int             variable       1    9 
+1@b                       int             variable            11 
+1@c                       int             variable            11 
 
