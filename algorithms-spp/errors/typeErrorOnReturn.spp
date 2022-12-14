@@ -1,0 +1,9 @@
+function iAmAFloat() : float
+{
+    return 10.5;
+}
+
+function main() : int
+{
+    int a = iAmAFloat();
+}

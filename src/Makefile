@@ -42,7 +42,7 @@ CYAN=\x1B[36m
 
 $(ALGORITHMS):
 	@echo -e '\n$(CYAN)$(BOLD)make $@$(RESET)'
-	./$(COMPILER) $(OPTIONS) $(DIR_SOURCE)/$(@:test-%=%).spp
+	./$(COMPILER) $(OPTIONS) -i $(DIR_SOURCE)/$(@:test-%=%).spp -o $(DIR_SOURCE)/$(@:test-%=%).out.c
 
 $(BROKEN_ALGORITHMS):
 	@echo -e '\n$(CYAN)$(BOLD)make $@$(RESET)'

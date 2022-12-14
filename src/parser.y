@@ -837,6 +837,7 @@ int main (int argc, char *argv[]) {
     malloc_hashtable();
 
     int c, hasInputOpt = 0, printParseTree = 0;
+    char *fileInputOpt = NULL, *fileOutputOpt = NULL;
     while (1)
     {
         int option_index = 0;
@@ -857,13 +858,16 @@ int main (int argc, char *argv[]) {
         switch (c) {
             case 'i':
                 yyin = fopen(optarg, "r");
-                yyparse();
+                fileInputOpt = optarg;
+                /* yyparse();
                 fclose(yyin);
-                hasInputOpt = 1;
+                hasInputOpt = 1; */
                 break;
 
             case 'o':
-                printf("option '%c' with value '%s'\n", c, optarg);
+                fclose(fopen(optarg, "w"));
+                yyout = fopen(optarg, "a+");
+                fileOutputOpt = optarg;
                 break;
 
             case 't':
@@ -893,16 +897,28 @@ int main (int argc, char *argv[]) {
             }
     }
 
-    if(!hasInputOpt && optind < argc) {
-      yyin = fopen(argv[optind++], "r");
-      yyparse();
-      fclose(yyin);
+    // IF HASN'T INPUT FILE OPT
+    if(!fileInputOpt && optind < argc) {
+        yyin = fopen(argv[optind], "r");
+        printf("opt _ input: %s\n", argv[optind]);
+        optind++;
+
     }
 
-    if(!hasInputOpt && argc == 1) {
-         printf("%s: fatal error! no input files\n", argv[0]);
-         exit(0);
+    if(!fileInputOpt && argc == 1) {
+        printf("%s: fatal error! no input files\n", argv[0]);
+        exit(0);
     }
+
+    // IF HASN'T OUTPUT FILE OPT
+    if(!fileOutputOpt && optind < argc) {
+        fclose(fopen(argv[optind], "w"));
+        yyout = fopen(argv[optind], "a+");
+        printf("opt _ output: %s\n", argv[optind]);
+        optind++;
+    }
+
+    yyparse();
 
     if(fileSymbolTable) {
       dump_symboltable(fileSymbolTable);
@@ -911,6 +927,9 @@ int main (int argc, char *argv[]) {
     if(printParseTree) {
       print_tree(parsetree);
     } 
+
+    fclose(yyin);
+    fclose(yyout);
 
     return 0;
 }
