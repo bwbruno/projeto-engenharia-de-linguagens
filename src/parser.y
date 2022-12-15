@@ -996,7 +996,7 @@ expr : ID dimen_ind_op
 
             sprintf(buffer, "snprintf(%s, t%d+1, \"%%f\", t%d);\n", $$.name, temp_var-1, temp_var-2);
             char *code3 = cat("// begin double_to_string\n", code2, buffer, "// end double_to_string\n", "");
-
+            temp_var++;
             $$.rec = createRecord(code3, "");
           
           } else if(check_types($2.name,$4.type) == INT_TO_DOUBLE){
@@ -1146,7 +1146,7 @@ if_stmt : IF LPAREN condition RPAREN LBRACE {sprintf(auxScope,"%d",idScope); pus
           {
             struct node *temp = mknode($7.nd, $10.nd, "body");
             $$.nd = mknode($3.nd, temp, "if-else");
-            sprintf(buffer,"if(%s) goto if%d; goto else%d;\nif%d:{\n%s}\nelse%d:{\n%s}",$3.rec->code,iflbl++,elselbl++,iflbl,$7.rec->code,elselbl,$10.rec->code);
+            sprintf(buffer,"{if(%s) goto if%d; goto else%d;\nif%d:{\n%s\ngoto nextif%d;\n}}\n{else%d:{\n%s}}\nnextif%d:{}",$3.rec->code,iflbl++,elselbl++,iflbl,$7.rec->code,iflbl,elselbl,$10.rec->code,iflbl);
             char *code = cat(buffer,"","","","");
             $$.rec = createRecord(code, "");
           }
@@ -1244,7 +1244,7 @@ scan_stmt : SCAN LPAREN ID dimen_ind_op RPAREN
                     char* code = cat("scanf(\"%i\", &", $3.name, ");" , "", "");
                     $$.rec = createRecord(code, "");
                 }else if(!strcmp(b->datatype,"double")){
-                    char* code = cat("scanf(\"%f\", &", $3.name, ");" , "", "");
+                    char* code = cat("scanf(\"%lf\", &", $3.name, ");" , "", "");
                     $$.rec = createRecord(code, "");
                 }else if(!strcmp(b->datatype,"string")){
                     char* code = cat("scanf(\"%s\", &", $3.name, ");" , "", "");

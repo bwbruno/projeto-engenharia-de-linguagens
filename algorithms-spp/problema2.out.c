@@ -14,30 +14,42 @@ int i76_100;
 i76_100 = 0;
 dowhile1:{
 scanf("%i", &input);
-if(input>=0&&input<=25) goto if1; goto else1;
+{if(input>=0&&input<=25) goto if1; goto else1;
 if1:{
 i0_25++;
-}
-else1:{
-}
-if(input>=26&&input<=50) goto if2; goto else2;
+
+goto nextif1;
+}}
+{else1:{
+}}
+nextif1:{}
+{if(input>=26&&input<=50) goto if2; goto else2;
 if2:{
 i26_50++;
-}
-else2:{
-}
-if(input>=51&&input<=75) goto if3; goto else3;
+
+goto nextif2;
+}}
+{else2:{
+}}
+nextif2:{}
+{if(input>=51&&input<=75) goto if3; goto else3;
 if3:{
 i51_75++;
-}
-else3:{
-}
-if(input>=76&&input<=100) goto if4; goto else4;
+
+goto nextif3;
+}}
+{else3:{
+}}
+nextif3:{}
+{if(input>=76&&input<=100) goto if4; goto else4;
 if4:{
 i76_100++;
-}
-else4:{
-}
+
+goto nextif4;
+}}
+{else4:{
+}}
+nextif4:{}
 }if(input>=0) goto dowhile1;
 printf("%s", "\n[0, 25]: ");
 

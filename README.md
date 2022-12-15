@@ -316,3 +316,17 @@ function main() : int
 MIT
 
 **Free Software, Hell Yeah!**
+
+
+
+
+
+- Documentação do compilador contendo no mínimo:
+  (1) Introdução: visão geral do projeto
+  (2) Design da implementação:
+      (A) Transformação do código-fonte em unidades léxicas;
+      (B) Representação de símbolos, tabela de símbolos e funções associadas;
+      (C) Tratamento de estruturas condicionais e de repetição;
+      (D) Tratamento de subprogramas;
+      (E) Verificações realizadas (tipos, faixas, declaração em duplicidade, etc).
+  (3) Instruções de uso do compilador.

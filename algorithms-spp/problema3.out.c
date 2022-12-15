@@ -11,15 +11,18 @@ scanf("%i", &linhasA);
 printf("%s", "Digite a quantidade de Colunas da Matriz A: ");
 
 scanf("%i", &colunasA);
-if(linhasA<=0&&colunasA<=0) goto if1; goto else1;
+{if(linhasA<=0&&colunasA<=0) goto if1; goto else1;
 if1:{
 printf("%s", "Error");
 
 return 1;
 
-}
-else1:{
-}
+
+goto nextif1;
+}}
+{else1:{
+}}
+nextif1:{}
 int matrizA[linhasA][colunasA];
 {int i;
 i = 0;
@@ -65,15 +68,18 @@ next4:{ }}
 int c;
 int t3 = linhasA-1;
 c = t3;
-if(i!=c) goto if2; goto else2;
+{if(i!=c) goto if2; goto else2;
 if2:{
 printf("%s", "\n\t");
 
-}
-else2:{
+
+goto nextif2;
+}}
+{else2:{
 printf("%s", "\n");
 
-}
+}}
+nextif2:{}
 }
 i++;
 goto for3;
@@ -84,15 +90,18 @@ scanf("%i", &linhasB);
 printf("%s", "Digite a quantidade de Colunas da Matriz B: ");
 
 scanf("%i", &colunasB);
-if(linhasB<=0&&colunasB<=0) goto if3; goto else3;
+{if(linhasB<=0&&colunasB<=0) goto if3; goto else3;
 if3:{
 printf("%s", "Error");
 
 return 1;
 
-}
-else3:{
-}
+
+goto nextif3;
+}}
+{else3:{
+}}
+nextif3:{}
 int matrizB[linhasB][colunasB];
 {int i;
 i = 0;
@@ -138,27 +147,32 @@ next8:{ }}
 int c;
 int t7 = linhasB-1;
 c = t7;
-if(i!=c) goto if4; goto else4;
+{if(i!=c) goto if4; goto else4;
 if4:{
 printf("%s", "\n\t");
 
-}
-else4:{
+
+goto nextif4;
+}}
+{else4:{
 printf("%s", "\n");
 
-}
+}}
+nextif4:{}
 }
 i++;
 goto for7;
 next7:{ }}
 int soma;
 soma = 0;
-if(linhasA!=linhasB||colunasA!=colunasB) goto if6; goto else6;
+{if(linhasA!=linhasB||colunasA!=colunasB) goto if6; goto else6;
 if6:{
 printf("%s", "Não é possível realizar a soma das matrizes A e B\n");
 
-}
-else6:{
+
+goto nextif6;
+}}
+{else6:{
 printf("%s", "Soma das Matrizes:\n\t");
 
 {int i;
@@ -189,20 +203,24 @@ next10:{ }}
 int c;
 int t12 = linhasA-1;
 c = t12;
-if(i!=c) goto if5; goto else5;
+{if(i!=c) goto if5; goto else5;
 if5:{
 printf("%s", "\n\t");
 
-}
-else5:{
+
+goto nextif5;
+}}
+{else5:{
 printf("%s", "\n");
 
-}
+}}
+nextif5:{}
 }
 i++;
 goto for9;
 next9:{ }}
-}
+}}
+nextif6:{}
 return 0;
 
 
