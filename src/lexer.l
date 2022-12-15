@@ -43,7 +43,6 @@ void RemoveChars(char *s, char c);
 "int"                   { strcpy(yylval.nd_obj.name,(yytext)); return INT; }
 "double"                { strcpy(yylval.nd_obj.name,(yytext)); return DOUBLE; }
 "bool"                  { strcpy(yylval.nd_obj.name,(yytext)); return BOOL; }
-"float"                 { strcpy(yylval.nd_obj.name,(yytext)); return FLOAT; }
 "string"                { strcpy(yylval.nd_obj.name,(yytext)); return STRING; }
 "enum"                  { strcpy(yylval.nd_obj.name,(yytext)); return ENUM; }
 "pointer"               { strcpy(yylval.nd_obj.name,(yytext)); return POINTER; }
