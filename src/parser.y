@@ -31,6 +31,7 @@ int auxDimension=0;
 int sizeList = 0;
 int temp_var = 0;
 int decls_opt = 0;
+int on_print = 0;
 int iflbl = 1;
 int elselbl = 1;
 int dowhilelbl = 1;
@@ -89,6 +90,7 @@ void print_help();
 void code_includes();
 char * cat(char *, char *, char *, char *, char *);
 void check_global_declaration();
+void check_print();
 
 %}
 
@@ -113,7 +115,7 @@ void check_global_declaration();
 
 %token <nd_lit> STRING_LITERAL INT_NUMBER DOUBLE_NUMBER
 %token <nd_obj> ID
-%token <nd_obj> INT FLOAT DOUBLE STRING BOOL ENUM POINTER POINT_TO
+%token <nd_obj> INT DOUBLE STRING BOOL ENUM POINTER POINT_TO
 %token <nd_obj> MAIN PROCEDURE FUNCTION RETURN
 %token <nd_obj> WHILE DO IF ELSE FOR SWITCH CASE BREAK DEFAULT PRINT SCAN PRINT_ARRAY
 %token <nd_obj> TRUE FALSE COMMA COLON SEMI_COLON LPAREN RPAREN LBRACK RBRACK LBRACE RBRACE DOT
@@ -712,6 +714,7 @@ expr : ID dimen_ind_op
        }
        | LPAREN expr RPAREN 
        {
+          check_print();
           sizeList++;
           strcpy($$.name, $2.name);
           strcpy($$.type, $2.type);
@@ -722,6 +725,7 @@ expr : ID dimen_ind_op
        }
        | expr PLUS expr     
        {
+          check_print();
           check_global_declaration();
           sizeList++;
           check_types_expr($1.type, $3.type, $2.name);
@@ -829,6 +833,7 @@ expr : ID dimen_ind_op
        }
        | expr MINUS expr    
        {
+          check_print();
           check_global_declaration();
           sizeList++;
           check_types_expr($1.type, $3.type, $2.name);
@@ -869,6 +874,7 @@ expr : ID dimen_ind_op
        }
        | expr MULT expr     
        {
+          check_print();
           check_global_declaration();
           sizeList++;
           $$.symbol = malloc(sizeof(struct bucket));
@@ -883,6 +889,7 @@ expr : ID dimen_ind_op
        }
        | expr DIVIDE expr   
        {
+          check_print();
           check_global_declaration();
           sizeList++;
           check_types_expr($1.type, $3.type, $2.name);
@@ -897,6 +904,7 @@ expr : ID dimen_ind_op
        }
        | expr MODULE expr   
        {
+          check_print();
           check_global_declaration();
           sizeList++;
           check_types_expr($1.type, $3.type, $2.name);
@@ -1184,44 +1192,45 @@ inc_dec : ID INCREMENT %prec POSINC { check_undeclared($1.name); char* code = ca
         | DECREMENT ID %prec PREDEC { check_undeclared($2.name); char* code = cat("--",$1.name,";","",""); $$.rec = createRecord(code,"");}
         ;
 
-print_stmt : PRINT LPAREN expr RPAREN
+print_stmt : { on_print = 1; } PRINT LPAREN expr RPAREN
              {
-                if(!strcmp($3.type, "string")){
-                    $$.nd = mknode($3.nd, NULL, $1.name);
+                if(!strcmp($4.type, "string")){
+                    $$.nd = mknode($4.nd, NULL, $2.name);
                     /*
-                    if(!strcmp($3.name,"\\n")){
+                    if(!strcmp($4.name,"\\n")){
                         printf("LOG 05\n");
-                        char* code = cat($3.rec->code, "printf(\"\\n\");", "", "\n", "");
+                        char* code = cat($4.rec->code, "printf(\"\\n\");", "", "\n", "");
                         printf("LOG 06\n");
                         $$.rec = createRecord(code, "");
                         printf("LOG 07\n");
                     }else{
                         printf("LOG 08\n");
-                        char* code = cat($3.rec->code, "printf(\"%s\", \"", $3.name, "\");\n", "");
+                        char* code = cat($4.rec->code, "printf(\"%s\", \"", $4.name, "\");\n", "");
                         $$.rec = createRecord(code, "");
                     }
                     */
-                    //char* code = cat($3.rec->code, "printf(\"%s\", \"", $3.name, "\");\n", "");
+                    //char* code = cat($4.rec->code, "printf(\"%s\", \"", $4.name, "\");\n", "");
                     /*
-                    if(!isLiteralString($3.name)){
-                        char* code = cat($3.rec->code, "printf(\"%s\", \"", $3.name, "\");\n", "");
+                    if(!isLiteralString($4.name)){
+                        char* code = cat($4.rec->code, "printf(\"%s\", \"", $4.name, "\");\n", "");
                         $$.rec = createRecord(code, "");
                     }else{
-                        char* code = cat($3.rec->code, "printf(\"%s\", ", $3.name, ");\n", "");
+                        char* code = cat($4.rec->code, "printf(\"%s\", ", $4.name, ");\n", "");
                         $$.rec = createRecord(code, "");
                     }
                     */
-                    if(!strcmp($3.symbol->type,"literal")){
-                        char* code = cat($3.rec->code, "printf(\"%s\", \"", $3.name, "\");\n", "");
+                    if(!strcmp($4.symbol->type,"literal")){
+                        char* code = cat($4.rec->code, "printf(\"%s\", \"", $4.name, "\");\n", "");
                         $$.rec = createRecord(code, "");
                     }else{
-                        char* code = cat($3.rec->code, "printf(\"%s\", ", $3.name, ");\n", "");
+                        char* code = cat($4.rec->code, "printf(\"%s\", ", $4.name, ");\n", "");
                         $$.rec = createRecord(code, "");
                     }
                 } else {
-                    printf("error: function print only take elements of string type.\n");
+                    printf("%s%sprint error:%s  function print only take elements of string type at line %d\n", RED, BOLD, RESET, yylineno);
                     exit(0);
                 }
+                on_print = 0;
              }
              ;
 
@@ -1558,7 +1567,7 @@ int check_types_expr(char *type1, char *type2, char *operand) {
     }
 
     printf("%s%stype error:%s unsupported operand type for '%s': '%s' and '%s' at line %d\n", RED, BOLD, RESET, operand, type1, type2, yylineno);
-    /* exit(0); */
+    exit(0);
     return 0;
 }
 
@@ -1577,7 +1586,7 @@ int check_types_assign(char *type1, char *type2, char *id) {
     }
 
     printf("%s%stype error:%s '%s' is a %s object and does not suport '%s' assignment at line %d\n", RED, BOLD, RESET, id, type1, type2, yylineno);
-    /* exit(0); */
+    exit(0);
     return 0;
 }
 
@@ -1621,7 +1630,7 @@ void check_declaration(char *id) {
 
     if(symbol != NULL) {
         printf("%s%serror:%s multiple declaration of '%s' at line %d\n", RED, BOLD, RESET, token, yylineno);
-        /* exit(0); */
+        exit(0);
     }     
 }
 
@@ -1688,6 +1697,13 @@ char * cat(char * s1, char * s2, char * s3, char * s4, char * s5){
 void check_global_declaration() {
     if(decls_opt) {
         printf("%s%sglobal declaration error:%s initializer element is not constant at line %d\n", RED, BOLD, RESET, yylineno);
+        exit(0);
+    }
+}
+
+void check_print() {
+    if(on_print) {
+        printf("%s%sprint declaration error:%s print fuction takes only one element each time %d\n", RED, BOLD, RESET, yylineno);
         exit(0);
     }
 }
