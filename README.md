@@ -1,7 +1,7 @@
 # Simple++ reference 
 Essa é uma linguagem implementada como projeto da disciplina de Engenharia de Linguagens do Bacharelado em Tecnologia da Informação da UFRN. A ideia por trás do Simple++ é tentar tornar a sintaxe do uso de ponteiros mais amigável e de simples entendimento. 
 
-## Como compilar
+## Como buildar o compilador simple++
 No terminal, com o lex, yacc ou bison instalados, dentro da pasta ***src***:
 
 **Windows**
@@ -23,9 +23,10 @@ Tambem existe a possibilidade de usar todos esses comandos via make
 $ make build
 ```
 
-E a possibilidade de executar todos os testes
+## Como usar o compilador simple++
+Com o executável do compilador passe a opção de --help e verá todas as opções disponíveis
 ```
-$ make build test-all
+$ ./parser.exe --help
 ```
 
 ## Tipos
