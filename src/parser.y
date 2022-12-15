@@ -31,6 +31,8 @@ int auxDimension=0;
 int sizeList = 0;
 int temp_var = 0;
 int decls_opt = 0;
+int iflbl = 1;
+int elselbl = 1;
 
 enum typecasting {
     SAME_TYPES,
@@ -447,7 +449,6 @@ stmt_list : stmt_list stmt
             }
             | stmt
             {
-                printf("stmt\n");
                 $$.nd = mknode($1.nd, NULL, "stmt");
                 char *code = cat($1.rec->code, "\n", "", "", "");
                 $$.rec = createRecord(code, "");
@@ -1024,7 +1025,9 @@ if_stmt : IF LPAREN condition RPAREN LBRACE {sprintf(auxScope,"%d",idScope); pus
           {
             struct node *temp = mknode($7.nd, $10.nd, "body");
             $$.nd = mknode($3.nd, temp, "if-else");
-            char *code = cat("if","","","","");
+            printf("CONDITION -> %s\n",$3.rec->code);
+            sprintf(buffer,"if(%s) goto if%d; goto else%d;\nif%d:{\n%s}\nelse%d:{\n%s}",$3.rec->code,iflbl++,elselbl++,iflbl,$7.rec->code,elselbl,$10.rec->code);
+            char *code = cat(buffer,"","","","");
             $$.rec = createRecord(code, "");
           }
         ;
@@ -1032,8 +1035,9 @@ if_stmt : IF LPAREN condition RPAREN LBRACE {sprintf(auxScope,"%d",idScope); pus
 else_stmt_opt : ELSE LBRACE {sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++;} stmt_list RBRACE {pop(scopes);} 
                 {
                    $$.nd = mknode($4.nd, NULL, $1.name);
+                   $$.rec = createRecord($4.rec->code,"");
                 }
-                | { $$.nd = NULL; }
+                | { $$.nd = NULL; $$.rec = createRecord("","");}
                 ;
           
 for_stmt : FOR LPAREN {sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++;} for_args RPAREN LBRACE  stmt_list RBRACE {pop(scopes);}
@@ -1152,39 +1156,49 @@ condition : condition logic_op c_term
             {
                struct node *temp = mknode($1.nd, $3.nd, "condition");
                $$.nd = mknode($2.nd, temp, "logic-op");
+               printf("LOGIC_OP -> %s\n",$2.rec->code);
+               char* code = cat($1.rec->code,$2.rec->code,$3.rec->code,"","");
+               $$.rec = createRecord(code,"");
             }
             | c_term
             {
                $$.nd = mknode($1.nd, NULL, "c-term");
+               printf("CTERM -> %s\n",$1.rec->code);
+               $$.rec = createRecord($1.rec->code,"");
             }
             ;
 
-c_term : ID    { $$.nd = mknode(NULL, NULL, $1.name); }
-       | TRUE  { $$.nd = mknode(NULL, NULL, $1.name); }
-       | FALSE { $$.nd = mknode(NULL, NULL, $1.name); }
-       | comp  { $$.nd = mknode($1.nd, NULL, "comp"); }
+c_term : ID    { $$.nd = mknode(NULL, NULL, $1.name); $$.rec = createRecord($1.name,"");}
+       | TRUE  { $$.nd = mknode(NULL, NULL, $1.name); $$.rec = createRecord($1.name,"");}
+       | FALSE { $$.nd = mknode(NULL, NULL, $1.name); $$.rec = createRecord($1.name,"");}
+       | comp  { $$.nd = mknode($1.nd, NULL, "comp"); printf("COMP -> %s\n",$1.rec->code); $$.rec = createRecord($1.rec->code,"");}
        ;
        
 comp : comp_term comp_op comp_term
        {
           $$.nd = mknode($1.nd, $3.nd, $2.name);
+          printf("COMP_TERM1 -> %s\n", $1.rec->code);
+          printf("OPERADOR -> %s\n", $2.rec->code);
+          printf("COMP_TERM2 -> %s\n", $3.rec->code);
+          char* code = cat($1.rec->code,$2.rec->code,$3.rec->code,"","");
+          $$.rec = createRecord(code,"");
        }
        ;
 
-comp_term : expr { $$.nd = mknode($1.nd, NULL, "expr"); }
+comp_term : expr { $$.nd = mknode($1.nd, NULL, "expr"); $$.rec = createRecord($1.name,""); }
           ;
 
-comp_op : EQ  { $$.nd = mknode(NULL, NULL, $1.name); }
-        | NEQ { $$.nd = mknode(NULL, NULL, $1.name); }
-        | GE  { $$.nd = mknode(NULL, NULL, $1.name); }
-        | LE  { $$.nd = mknode(NULL, NULL, $1.name); }
-        | GT  { $$.nd = mknode(NULL, NULL, $1.name); }
-        | LT  { $$.nd = mknode(NULL, NULL, $1.name); }
+comp_op : EQ  { $$.nd = mknode(NULL, NULL, $1.name); $$.rec = createRecord($1.name,"");}
+        | NEQ { $$.nd = mknode(NULL, NULL, $1.name); $$.rec = createRecord($1.name,"");}
+        | GE  { $$.nd = mknode(NULL, NULL, $1.name); $$.rec = createRecord($1.name,"");}
+        | LE  { $$.nd = mknode(NULL, NULL, $1.name); $$.rec = createRecord($1.name,"");}
+        | GT  { $$.nd = mknode(NULL, NULL, $1.name); $$.rec = createRecord($1.name,"");}
+        | LT  { $$.nd = mknode(NULL, NULL, $1.name); $$.rec = createRecord($1.name,"");}
         ;
 
-logic_op : AND { $$.nd = mknode(NULL, NULL, $1.name); }
-         | OR  { $$.nd = mknode(NULL, NULL, $1.name); }
-         | NOT { $$.nd = mknode(NULL, NULL, $1.name); }
+logic_op : AND { $$.nd = mknode(NULL, NULL, $1.name); $$.rec = createRecord("&&","");}
+         | OR  { $$.nd = mknode(NULL, NULL, $1.name); $$.rec = createRecord("||","");}
+         | NOT { $$.nd = mknode(NULL, NULL, $1.name); $$.rec = createRecord("!","");}
          ;
 
 %%
