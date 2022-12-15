@@ -33,6 +33,8 @@ int temp_var = 0;
 int decls_opt = 0;
 int iflbl = 1;
 int elselbl = 1;
+int dowhilelbl = 1;
+int auxTemp = 0;
 
 enum typecasting {
     SAME_TYPES,
@@ -749,7 +751,7 @@ expr : ID dimen_ind_op
                 char *code1 = cat(code0,$$.name, " = ", "\"", $1.symbol->value);
                 printf("Code1 -> %s\n",code1);
                 
-                sprintf(buffer, "char* temp = malloc(strlen(t%d) + strlen(t%d) + 1);\nstrcat(temp,t%d);\nstrcat(temp,t%d);\nt%d = temp;\n",temp_var-1,temp_var-2,temp_var-1,temp_var-2,temp_var-1);
+                sprintf(buffer, "char* temp%d = malloc(strlen(t%d) + strlen(t%d) + 1);\nstrcat(temp%d,t%d);\nstrcat(temp%d,t%d);\nt%d = temp%d;\n",auxTemp++,temp_var-1,temp_var-2,auxTemp,temp_var-1,auxTemp,temp_var-2,temp_var-1,auxTemp);
                 //char* temp = malloc(strlen(temp_var-1) + strlen(temp_var-2) + 1);
                 //strcat(temp,temp_var-1);
                 //strcat(temp,temp_var-2);
@@ -1018,6 +1020,8 @@ while_stmt : WHILE LPAREN condition RPAREN {sprintf(auxScope,"%d",idScope); push
              | DO LBRACE {sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++;} stmt_list RBRACE WHILE LPAREN condition RPAREN SEMI_COLON
              {
                 $$.nd = mknode($4.nd, $8.nd, "do-while");
+                sprintf(buffer,"dowhile%d:{\n%s}if(%s) goto dowhile%d;",dowhilelbl++,$4.rec->code,$8.rec->code,dowhilelbl);
+                $$.rec = createRecord(buffer,"");
              }
              ;
 
