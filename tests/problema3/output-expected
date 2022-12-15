@@ -1,0 +1,17 @@
+Digite a quantidade de Linhas da Matriz A: 2
+Digite a quantidade de Colunas da Matriz A: 2
+1 2 3 4
+Matriz A:
+        1 2 
+        3 4 
+Digite a quantidade de Linhas da Matriz B: 2 2
+Digite a quantidade de Colunas da Matriz B: 5 6 7 8     
+Matriz B:
+        5 6 
+        7 8 
+Soma das Matrizes:
+        6 8 
+        10 12 
+Multiplicação das Matrizes:
+        19 22 
+        43 50 

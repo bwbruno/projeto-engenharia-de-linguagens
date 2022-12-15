@@ -27,10 +27,15 @@ function main() : int
 
     } while(input >= 0); 
     
-    print("\n[0, 25]: " + (string) i0_25);
-    print("\n[26, 50]: " + (string) i26_50);
-    print("\n[51, 75]: " + (string) i51_75);
-    print("\n[76, 100]: " + (string) i76_100);
+    print("\n[0, 25]: ");
+    print((string) i0_25);
+    print("\n[26, 50]: ");
+    print((string) i26_50);
+    print("\n[51, 75]: ");
+    print((string) i51_75);
+    print("\n[76, 100]: ");
+    print((string) i76_100);
+    print("\n");
 
     return 0;
 }

@@ -22,7 +22,7 @@ extern char *fileStack;
 extern char *fileSymbolTable;
 extern struct stack *scopes;
 
-char buffer[500];
+char buffer[20000];
 struct node *parsetree;
 int idScope = 1;
 char auxScope[10];
@@ -35,6 +35,8 @@ int iflbl = 1;
 int elselbl = 1;
 int dowhilelbl = 1;
 int auxTemp = 0;
+int forlbl = 1;
+int qtyDimension = 0;
 
 enum typecasting {
     SAME_TYPES,
@@ -74,6 +76,7 @@ void insert_value(char* id, char* value);
 void print_tree(struct node*);
 void print_preorder(struct node *);
 struct node* mknode(struct node *left, struct node *right, char *token);
+char *get_array_datatype(char *id);
 char *get_symbol_datatype(char *id);
 void *set_symbol_datatype(char *id, char *type);
 int check_types(char *type1, char *type2);
@@ -159,7 +162,7 @@ decls : decls decl
             $$.rec = createRecord(code, "");
         }
         |  decl
-        {
+        {   
             $$.nd = mknode($1.nd, NULL, "decl");
             char *code = cat($1.rec->code, "\n", "", "", "");
             $$.rec = createRecord(code, "");
@@ -175,7 +178,7 @@ decl : type dimen_op_opt ids SEMI_COLON
             strcpy(auxType,"");
             // printf("Tipo de %s -> %s (auxType = ->%s<-)\n",$3.name, $3.symbol->type,auxType);
 
-            char *code = cat($1.rec->code, $2.rec->code, $3.rec->code, $4.name, "");
+            char *code = cat($1.rec->code,$3.rec->code, $2.rec->code, $4.name, "");
             $$.rec = createRecord(code, "");
             $$.nd = mknode(temp, $3.nd, "ids");
        }
@@ -208,7 +211,7 @@ decl_init_list : type LBRACK RBRACK ids SEMI_COLON
 dimen_op_opt : dimen_ops
                {
                     $$.nd = mknode($1.nd, NULL, "decl-op-opt");
-                    $$.rec = createRecord("", "");
+                    $$.rec = createRecord($1.rec->code, "");
                }
                |
                {
@@ -220,10 +223,13 @@ dimen_op_opt : dimen_ops
 dimen_ops : dimen_ops dimen_op
             {
                 $$.nd = mknode($1.nd, $2.nd, "decl-ops");
+                char* code = cat($1.rec->code,$2.rec->code,"","","");
+                $$.rec = createRecord(code,"");
             }
             | dimen_op
             {
                 $$.nd = mknode($1.nd, NULL, "decl-op");
+                $$.rec = createRecord($1.rec->code, "");
             }
             ;
 
@@ -236,6 +242,8 @@ dimen_op : LBRACK num_expr RBRACK
                 strcat(auxType,temp);
                 //printf("+1 DIMENSÃO\n");
                 $$.nd = mknode($2.nd, NULL, "decl-op");
+                char* code = cat($1.name,$2.rec->code,$3.name,"","");
+                $$.rec = createRecord(code,"");
            }
            ; 
 
@@ -282,7 +290,6 @@ ids : ID assign_op LBRACE expr_list RBRACE
             char *code1 = cat($1.rec->code, ",", $3.name, ";\n", $5.rec->code);
             char *code2 = cat(code1, $3.name, " = \"", $5.name, "\"");
             $$.rec = createRecord(code2, "");
-            printf("TESTE STRING 4\n");
           }
       }
       | ID assign_op expr
@@ -303,13 +310,11 @@ ids : ID assign_op LBRACE expr_list RBRACE
             char *code1 = cat($1.name, ";\n", $3.rec->code, "", "");
             char *code2 = cat(code1, $1.name, " = \"", $3.name, "\"");
             $$.rec = createRecord(code2, "");
-            printf("TESTE STRING 4\n");
 
           } else {
             char *code1 = cat($1.name, ";\n", $3.rec->code, "", "");
             char *code2 = cat(code1, $1.name, " = ", $3.name, "");
             $$.rec = createRecord(code2, "");
-            printf("TESTE 04\n");
           }
       }
       | ids COMMA ID
@@ -374,7 +379,6 @@ function : FUNCTION ID { insert_key($2.name, $1.name); sprintf(auxScope,"%d",idS
 
 main : FUNCTION MAIN { insert_key($2.name, $1.name); sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++; } LPAREN args_op RPAREN COLON type LBRACE stmt_list RBRACE
        {
-            printf("main\n");
             pop(scopes);
             set_symbol_datatype($2.name, $8.name);
             struct node *temp = mknode($5.nd, $10.nd, $2.name);
@@ -460,34 +464,50 @@ stmt_list : stmt_list stmt
 stmt : while_stmt
        {
            $$.nd = mknode($1.nd, NULL, "while-stmt");
+           char *code = cat($1.rec->code, "", "", "", "");
+           $$.rec = createRecord(code, "");
        }
        | assign_stmt SEMI_COLON
        {
           $$.nd = mknode($1.nd, NULL, "assign-stmt");
+          char *code = cat($1.rec->code, "", "", "", "");
+          $$.rec = createRecord(code, "");
        }
        | if_stmt
        {
           $$.nd = mknode($1.nd, NULL, "if-stmt");
+          char *code = cat($1.rec->code, "", "", "", "");
+          $$.rec = createRecord(code, "");
        }
        | for_stmt
        {
           $$.nd = mknode($1.nd, NULL, "for-stmt");
+          char *code = cat($1.rec->code, "", "", "", "");
+          $$.rec = createRecord(code, "");
        }
        | switch_stmt
        {
           $$.nd = mknode($1.nd, NULL, "switch-stmt");
+          char *code = cat($1.rec->code, "", "", "", "");
+          $$.rec = createRecord(code, "");
        }
        | inc_dec SEMI_COLON
        {
           $$.nd = mknode($1.nd, NULL, "inc-dec");
+          char *code = cat($1.rec->code, "", "", "", "");
+          $$.rec = createRecord(code, "");
        }
        | print_stmt  SEMI_COLON
        {
           $$.nd = mknode($1.nd, NULL, "print-stmt");
+          char *code = cat($1.rec->code, "", "", "", "");
+          $$.rec = createRecord(code, "");
        }
        | scan_stmt SEMI_COLON
        {
           $$.nd = mknode($1.nd, NULL, "scan-stmt");
+          char *code = cat($1.rec->code, "", "", "", "");
+          $$.rec = createRecord(code, "");
        }
        | return_stmt
        {
@@ -498,10 +518,14 @@ stmt : while_stmt
        | func_call SEMI_COLON
        {
           $$.nd = mknode($1.nd, NULL, "func-call ");
+          char *code = cat($1.rec->code, "", "", "", "");
+          $$.rec = createRecord(code, "");
        }
        | pointer_method
        {
           $$.nd = mknode($1.nd, NULL, "pointer-method");
+          char *code = cat($1.rec->code, "", "", "", "");
+          $$.rec = createRecord(code, "");
        }
        | decl
        {
@@ -552,17 +576,21 @@ assign_stmt : ID dimen_ind_op assign_op expr
               ;
 
 dimen_ind_op : LBRACK ind_op RBRACK dimen_ind_op
-               {
+               {   
+                  qtyDimension++;
                   $$.nd = mknode($2.nd, $4.nd, "dimen-ind-op");
+                  char* code = cat($1.name,$2.rec->code,$3.name,$4.rec->code,"");
+                  $$.rec = createRecord(code,"");
                }
-               | { $$.nd = NULL; }
+               | { $$.nd = NULL; $$.rec = createRecord("","");}
                ;
 
 ind_op : num_expr
          {
             $$.nd = mknode($1.nd, NULL, "ind_op");
+            $$.rec = createRecord($1.rec->code, "");
          }
-         | { $$.nd = NULL; }
+         | { $$.nd = NULL; $$.rec = createRecord("", ""); }
          ;
 
 assign_op : ASSIGN        
@@ -615,7 +643,13 @@ expr : ID dimen_ind_op
           strcpy($$.symbol->type, "variable");
           struct bucket *b = check_undeclared($1.name);
           strcpy($$.symbol->value,b->value);
-          $$.rec = createRecord("", "");
+          if($2.nd){
+            // char* code = cat("scanf(\"%i\", &", $1.name,$2.rec->code,");", "");
+            strcpy($$.name, cat($1.name, $2.rec->code, "", "", ""));
+            $$.rec = createRecord("", "");       
+          }else{
+            $$.rec = createRecord("", "");
+          }
        }
        | INT_NUMBER         
        {
@@ -644,7 +678,6 @@ expr : ID dimen_ind_op
           strcpy($$.symbol->value, $1.name);
           strcpy($$.symbol->type, "literal");
           strcpy($$.name, $1.name);
-          printf("LOG -> %s\n",$1.name);
           sprintf($$.type, "string");
           $$.nd = mknode(NULL, NULL, $1.name);
           $$.rec = createRecord("", "");
@@ -693,8 +726,10 @@ expr : ID dimen_ind_op
           sizeList++;
           check_types_expr($1.type, $3.type, $2.name);
           $$.symbol = malloc(sizeof(struct bucket));
-          
-          if(!strcmp($1.type,"int") || !strcmp($1.type, "double")){
+
+          char *t1 = get_array_datatype($1.type); 
+          char *t2 = get_array_datatype($3.type); 
+          if(!strcmp(($1.type),"int")){
             int temp1 = atoi($1.symbol->value);
             int temp2 = atoi($3.symbol->value);
             int result = temp1 + temp2;
@@ -705,6 +740,21 @@ expr : ID dimen_ind_op
             sprintf($$.name, "t%d", temp_var);
             temp_var++;
             char *code0 = cat($1.rec->code, $3.rec->code, $1.type, "", "");
+            char *code1 = cat(code0, " ", $$.name, " = ", $1.name);
+            char *code2 = cat(code1, $2.name, $3.name, ";\n", "");
+            $$.rec = createRecord(code2, "");
+
+          }else if(!strcmp((t1),"int") || !strcmp((t2),"int")){
+            int temp1 = atoi($1.symbol->value);
+            int temp2 = atoi($3.symbol->value);
+            int result = temp1 + temp2;
+            char resultTemp[40] = "";
+            sprintf(resultTemp, "%d", result);
+            strcpy($$.symbol->value,resultTemp);
+            
+            sprintf($$.name, "t%d", temp_var);
+            temp_var++;
+            char *code0 = cat($1.rec->code, $3.rec->code, t1, "", "");
             char *code1 = cat(code0, " ", $$.name, " = ", $1.name);
             char *code2 = cat(code1, $2.name, $3.name, ";\n", "");
             $$.rec = createRecord(code2, "");
@@ -772,30 +822,6 @@ expr : ID dimen_ind_op
             printf("TIPO PEGANDO -> %s\n", $3.symbol->type);
             printf("String Concatenada -> %s\n", temp);
             strcpy($$.symbol->value, temp);
-
-            
-//   int tam;
-//   char * output;
-
-//   tam = strlen(s1) + strlen(s2) + strlen(s3) + strlen(s4) + strlen(s5)+ 1;
-//   output = (char *) malloc(sizeof(char) * tam);
-  
-//   if (!output){
-//     printf("Allocation problem. Closing application...\n");
-//     exit(0);
-//   }
-  
-//   sprintf(output, "%s%s%s%s%s", s1, s2, s3, s4, s5);
-           
-            //sprintf($$.name, "t%d", temp_var);
-            //temp_var++;
-            //char *code0 = cat($1.rec->code, $3.rec->code, isString($1.type), "", " ");
-            //printf("Code0 -> %s\n",code0);
-            //char *code1 = cat(code0,$$.name, " = ", "\"", $1.symbol->value);
-            //printf("Code1 -> %s\n",code1);
-            //char *code2 = cat(code1,"", "", $3.symbol->value, "\";\n");
-            //printf("Code2 -> %s\n",code2);
-            //$$.rec = createRecord(code2, "");
           }
 
           $$.nd = mknode($1.nd, $3.nd, $2.name);
@@ -806,14 +832,40 @@ expr : ID dimen_ind_op
           check_global_declaration();
           sizeList++;
           check_types_expr($1.type, $3.type, $2.name);
-          $$.nd = mknode($1.nd, $3.nd, $2.name);
+          $$.symbol = malloc(sizeof(struct bucket));
+          
+          if(!strcmp($1.type,"int")){
+            int temp1 = atoi($1.symbol->value);
+            int temp2 = atoi($3.symbol->value);
+            int result = temp1 - temp2;
+            char resultTemp[40] = "";
+            sprintf(resultTemp, "%d", result);
+            strcpy($$.symbol->value,resultTemp);
+            
+            sprintf($$.name, "t%d", temp_var);
+            temp_var++;
+            char *code0 = cat($1.rec->code, $3.rec->code, $1.type, "", "");
+            char *code1 = cat(code0, " ", $$.name, " = ", $1.name);
+            char *code2 = cat(code1, $2.name, $3.name, ";\n", "");
+            $$.rec = createRecord(code2, "");
 
-          sprintf($$.name, "t%d", temp_var);
-          temp_var++;
-          char *code0 = cat($1.rec->code, $3.rec->code, $1.type, "", "");
-          char *code1 = cat(code0, " ", $$.name, " = ", $1.name);
-          char *code2 = cat(code1, $2.name, $3.name, ";\n", "");
-          $$.rec = createRecord(code2, "");
+          }else if(!strcmp($1.type,"double")){
+            double temp1 = atof($1.symbol->value);
+            double temp2 = atof($3.symbol->value);
+            double result = temp1 - temp2;
+            char resultTemp[40];
+            sprintf(resultTemp, "%f", result);
+            strcpy($$.symbol->value,resultTemp);
+
+            sprintf($$.name, "t%d", temp_var);
+            temp_var++;
+            char *code0 = cat($1.rec->code, $3.rec->code, $1.type, "", "");
+            char *code1 = cat(code0, " ", $$.name, " = ", $1.name);
+            char *code2 = cat(code1, $2.name, $3.name, ";\n", "");
+            $$.rec = createRecord(code2, "");
+
+          }
+          $$.nd = mknode($1.nd, $3.nd, $2.name);
        }
        | expr MULT expr     
        {
@@ -878,21 +930,42 @@ expr : ID dimen_ind_op
             // char* str = malloc( length + 1 );
             // snprintf( str, length + 1, "%d", x );
 
-            sprintf(buffer, "int t%d = %s;\n", temp_var++, $4.name);
-            char *code0 = cat(buffer, "", "", "", "");
+            // char* code = cat("scanf(\"%i\", &", $1.name,$2.rec->code,");", "");
+            
+            if(!strcmp($4.symbol->type, "variable")) {
+                sprintf(buffer, "int t%d = %s;\n", temp_var++, $4.name);
+                char *code0 = cat(buffer, "", "", "", "");
 
-            sprintf(buffer, "int t%d = snprintf(NULL, 0, \"%%d\", t%d);\n", temp_var, temp_var-1);
-            char *code1 = cat(code0, buffer, "", "", "");
+                sprintf(buffer, "int t%d = snprintf(NULL, 0, \"%%d\", t%d);\n", temp_var, temp_var-1);
+                char *code1 = cat(code0, buffer, "", "", "");
 
-            sprintf($$.name, "t%d", ++temp_var);
-            sprintf(buffer, "char* %s = malloc(t%d+1);\n", $$.name, temp_var-1);
-            char *code2 = cat(code1, buffer, "", "", "");
+                sprintf($$.name, "t%d", ++temp_var);
+                sprintf(buffer, "char* %s = malloc(t%d+1);\n", $$.name, temp_var-1);
+                char *code2 = cat(code1, buffer, "", "", "");
 
-            sprintf(buffer, "snprintf(%s, t%d+1, \"%%d\", t%d);\n", $$.name, temp_var-1, temp_var-2);
-            char *code3 = cat("// begin int_to_string\n", code2, buffer, "// end int_to_string\n", "");
-            temp_var++;
-            $$.rec = createRecord(code3, "");
-            strcpy($$.symbol->type,"literal");
+                sprintf(buffer, "snprintf(%s, t%d+1, \"%%d\", t%d);\n", $$.name, temp_var-1, temp_var-2);
+                char *code3 = cat("// begin int_to_string\n", code2, buffer, "// end int_to_string\n", "");
+                temp_var++;
+                $$.rec = createRecord(code3, "");
+                strcpy($$.symbol->type,"variable");
+            }
+            if(!strcmp($4.symbol->type, "literal")) {
+                sprintf(buffer, "int t%d = %s;\n", temp_var++, $4.name);
+                char *code0 = cat(buffer, "", "", "", "");
+
+                sprintf(buffer, "int t%d = snprintf(NULL, 0, \"%%d\", t%d);\n", temp_var, temp_var-1);
+                char *code1 = cat(code0, buffer, "", "", "");
+
+                sprintf($$.name, "t%d", ++temp_var);
+                sprintf(buffer, "char* %s = malloc(t%d+1);\n", $$.name, temp_var-1);
+                char *code2 = cat(code1, buffer, "", "", "");
+
+                sprintf(buffer, "snprintf(%s, t%d+1, \"%%d\", t%d);\n", $$.name, temp_var-1, temp_var-2);
+                char *code3 = cat("// begin int_to_string\n", code2, buffer, "// end int_to_string\n", "");
+                temp_var++;
+                $$.rec = createRecord(code3, "");
+                strcpy($$.symbol->type,"literal");
+            }
 
           } else if(check_types($2.name,$4.type) == DOUBLE_TO_STRING){
             $$.symbol = malloc(sizeof(struct bucket));
@@ -966,6 +1039,7 @@ num_expr : ID
                 char *id_type = get_symbol_datatype($1.name);
                 strcpy($$.type, id_type);
                 $$.nd = mknode(NULL, NULL, $1.name);
+                $$.rec = createRecord($1.name,"");
            }
            | INT_NUMBER
            {
@@ -986,7 +1060,42 @@ num_expr : ID
            }
            | num_expr MINUS num_expr
            {
+                check_global_declaration();
+                sizeList++;
                 check_types_expr($1.type, $3.type, $2.name);
+                $$.symbol = malloc(sizeof(struct bucket));
+                
+                if(!strcmp($1.type,"int")){
+                    int temp1 = atoi($1.symbol->value);
+                    int temp2 = atoi($3.symbol->value);
+                    int result = temp1 - temp2;
+                    char resultTemp[40] = "";
+                    sprintf(resultTemp, "%d", result);
+                    strcpy($$.symbol->value,resultTemp);
+                    
+                    sprintf($$.name, "t%d", temp_var);
+                    temp_var++;
+                    char *code0 = cat($1.rec->code, $3.rec->code, $1.type, "", "");
+                    char *code1 = cat(code0, " ", $$.name, " = ", $1.name);
+                    char *code2 = cat(code1, $2.name, $3.name, ";\n", "");
+                    $$.rec = createRecord(code2, "");
+
+                }else if(!strcmp($1.type,"double")){
+                    double temp1 = atof($1.symbol->value);
+                    double temp2 = atof($3.symbol->value);
+                    double result = temp1 - temp2;
+                    char resultTemp[40];
+                    sprintf(resultTemp, "%f", result);
+                    strcpy($$.symbol->value,resultTemp);
+
+                    sprintf($$.name, "t%d", temp_var);
+                    temp_var++;
+                    char *code0 = cat($1.rec->code, $3.rec->code, $1.type, "", "");
+                    char *code1 = cat(code0, " ", $$.name, " = ", $1.name);
+                    char *code2 = cat(code1, $2.name, $3.name, ";\n", "");
+                    $$.rec = createRecord(code2, "");
+
+                }
                 $$.nd = mknode($1.nd, $3.nd, $2.name);
            }
            | num_expr MULT num_expr
@@ -1029,7 +1138,6 @@ if_stmt : IF LPAREN condition RPAREN LBRACE {sprintf(auxScope,"%d",idScope); pus
           {
             struct node *temp = mknode($7.nd, $10.nd, "body");
             $$.nd = mknode($3.nd, temp, "if-else");
-            printf("CONDITION -> %s\n",$3.rec->code);
             sprintf(buffer,"if(%s) goto if%d; goto else%d;\nif%d:{\n%s}\nelse%d:{\n%s}",$3.rec->code,iflbl++,elselbl++,iflbl,$7.rec->code,elselbl,$10.rec->code);
             char *code = cat(buffer,"","","","");
             $$.rec = createRecord(code, "");
@@ -1047,18 +1155,26 @@ else_stmt_opt : ELSE LBRACE {sprintf(auxScope,"%d",idScope); push(scopes, auxSco
 for_stmt : FOR LPAREN {sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++;} for_args RPAREN LBRACE  stmt_list RBRACE {pop(scopes);}
            {
               $$.nd = mknode($4.nd, $7.nd, $1.name);
+              sprintf(buffer,"{%s}",$7.rec->code);
+              char* code = cat($4.rec->code,buffer,$4.rec->code_opt1,"","");
+              
+              $$.rec = createRecord(code, "");
            }
          ;
 
-for_args : assign_stmt SEMI_COLON ID comp_op ID SEMI_COLON inc_dec
+for_args : assign_stmt SEMI_COLON condition SEMI_COLON inc_dec
          {
-            check_undeclared($3.name); 
-            check_undeclared($5.name); 
+            $$.rec = createRecord("", "");
          }
-         | decls ID comp_op ID SEMI_COLON inc_dec
+         | decls condition SEMI_COLON inc_dec
          {
-            check_undeclared($2.name); 
-            check_undeclared($4.name); 
+            sprintf(buffer,"{%sfor%d:\nif(%s) goto for%dbody; goto next%d;\nfor%dbody:",$1.rec->code, forlbl++, $2.rec->code, forlbl, forlbl, forlbl);
+            char* code = cat(buffer, "", "", "", "");
+
+            sprintf(buffer,"\n%s\ngoto for%d;\nnext%d:{ }}", $4.rec->code, forlbl-1, forlbl-1);
+            char* code2 = cat(buffer, "", "", "", "");
+
+            $$.rec = createRecord(code, code2);
          }
          ;
 
@@ -1112,10 +1228,8 @@ print_stmt : PRINT LPAREN expr RPAREN
 scan_stmt : SCAN LPAREN ID dimen_ind_op RPAREN
             {   
                 $$.nd = mknode($4.nd, NULL, $1.name);
-                printf("ID NAME -> %s\n",$3.name);
 
                 struct bucket *b = check_undeclared($3.name);
-                printf("ID TIPO -> %s\n",b->datatype);
 
                 if(!strcmp(b->datatype,"int")){
                     char* code = cat("scanf(\"%i\", &", $3.name, ");" , "", "");
@@ -1129,7 +1243,13 @@ scan_stmt : SCAN LPAREN ID dimen_ind_op RPAREN
                 }else if(!strcmp(b->datatype,"bool")){
                     char* code = cat("scanf(\"%i\", &", $3.name, ");" , "", "");
                     $$.rec = createRecord(code, "");
+                }else if($4.nd){
+                    char* code = cat("scanf(\"%i\", &", $3.name,$4.rec->code,");", "");
+                    $$.rec = createRecord(code, "");       
                 }
+
+                // printf("ENTRE NO SCANSTMT -> %s\n",$4.rec->code);
+                // $$.rec = createRecord("", "");
             }
             ; 
 
@@ -1160,14 +1280,12 @@ condition : condition logic_op c_term
             {
                struct node *temp = mknode($1.nd, $3.nd, "condition");
                $$.nd = mknode($2.nd, temp, "logic-op");
-               printf("LOGIC_OP -> %s\n",$2.rec->code);
                char* code = cat($1.rec->code,$2.rec->code,$3.rec->code,"","");
                $$.rec = createRecord(code,"");
             }
             | c_term
             {
                $$.nd = mknode($1.nd, NULL, "c-term");
-               printf("CTERM -> %s\n",$1.rec->code);
                $$.rec = createRecord($1.rec->code,"");
             }
             ;
@@ -1175,15 +1293,12 @@ condition : condition logic_op c_term
 c_term : ID    { $$.nd = mknode(NULL, NULL, $1.name); $$.rec = createRecord($1.name,"");}
        | TRUE  { $$.nd = mknode(NULL, NULL, $1.name); $$.rec = createRecord($1.name,"");}
        | FALSE { $$.nd = mknode(NULL, NULL, $1.name); $$.rec = createRecord($1.name,"");}
-       | comp  { $$.nd = mknode($1.nd, NULL, "comp"); printf("COMP -> %s\n",$1.rec->code); $$.rec = createRecord($1.rec->code,"");}
+       | comp  { $$.nd = mknode($1.nd, NULL, "comp"); $$.rec = createRecord($1.rec->code,"");}
        ;
        
 comp : comp_term comp_op comp_term
        {
           $$.nd = mknode($1.nd, $3.nd, $2.name);
-          printf("COMP_TERM1 -> %s\n", $1.rec->code);
-          printf("OPERADOR -> %s\n", $2.rec->code);
-          printf("COMP_TERM2 -> %s\n", $3.rec->code);
           char* code = cat($1.rec->code,$2.rec->code,$3.rec->code,"","");
           $$.rec = createRecord(code,"");
        }

@@ -4,7 +4,7 @@ Scope@Id                  Datatype        Type           Value Line Numbers
 0@main                    int             function            1 
 1@a                       int             variable            1 
 1@c                       int             variable       20   5 
-1@r                       double          variable       20   6 
+1@r                       double          variable       -5   6 
 1@x                       double          variable       10.5 3 
 1@y                       double          variable       25.5 4 
 

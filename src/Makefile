@@ -47,3 +47,6 @@ $(ALGORITHMS):
 $(BROKEN_ALGORITHMS):
 	@echo -e '\n$(CYAN)$(BOLD)make $@$(RESET)'
 	./$(COMPILER) $(DIR_BROKEN_SOURCE)/$(@:test-broken-%=%).spp
+
+#test-all-generate:
+#	make build && make test-problema3 && gcc ../algorithms-spp/problema3.out.c && { cat ../tests/problema3/input; } | ./a.out && make build && make test-problema2 && gcc ../algorithms-spp/problema2.out.c && ./a.out  && make build && make test-problema1 && gcc ../algorithms-spp/problema1.out.c && ./a.out
