@@ -62,6 +62,8 @@ typedef union Value{
     char *sValue; /* string value  */
 } Value;
 
+int isLiteralString(char* str);
+char* isString(char* str);
 int Round(double number);
 void RemoveChars(char *s, char c);
 void insert_value(char* id, char* value);
@@ -607,6 +609,7 @@ expr : ID dimen_ind_op
           strcpy($$.type, id_type);
           $$.nd = mknode($2.nd, NULL, $1.name);
           $$.symbol = malloc(sizeof(struct bucket));
+          strcpy($$.symbol->type, "variable");
           struct bucket *b = check_undeclared($1.name);
           strcpy($$.symbol->value,b->value);
           $$.rec = createRecord("", "");
@@ -635,8 +638,10 @@ expr : ID dimen_ind_op
        {
           sizeList++;
           $$.symbol = malloc(sizeof(struct bucket));
-          strcpy($$.symbol->value,$1.name);
+          strcpy($$.symbol->value, $1.name);
+          strcpy($$.symbol->type, "literal");
           strcpy($$.name, $1.name);
+          printf("LOG -> %s\n",$1.name);
           sprintf($$.type, "string");
           $$.nd = mknode(NULL, NULL, $1.name);
           $$.rec = createRecord("", "");
@@ -717,12 +722,55 @@ expr : ID dimen_ind_op
             $$.rec = createRecord(code2, "");
 
           }else if(!strcmp($1.type, "string")){
-            strcat($1.symbol->value, $3.symbol->value);
-            printf("String Concatenada -> %s\n", $1.symbol->value);
-            strcpy($$.symbol->value, $1.symbol->value);
+            char temp[200] = "\"";
+            if(!strcmp($1.symbol->type,"variable")) {
+                printf("ENTREI 01\n");
+                if(!strcmp($3.symbol->type,"variable")){
+                    //strcat($1.symbol->value, $3.symbol->value);
+                    strcpy(temp,$1.name);
+                    strcat(temp,$3.name);
+                    printf("DUAS VARIAVEIS -> %s\n", temp);
+                }else{
+                    //strcat()
+                }
 
-            sprintf($$.name, "t%d", temp_var);
-            temp_var++;
+            }else if(!strcmp($1.symbol->type,"literal") && !strcmp($3.symbol->type,"literal")){
+                printf("ENTREI 02\n");
+                printf("nao eh variable: %s ---- nao eh variable: %s\n", $1.name, $3.name);
+                strcat(temp,$1.symbol->value);
+                strcat(temp,$3.symbol->value);
+                strcat(temp,"\"");
+
+                sprintf($$.name, "t%d", temp_var);
+                temp_var++;
+                char *code0 = cat($1.rec->code, $3.rec->code, isString($1.type), "", " ");
+                printf("Code0 -> %s\n",code0);
+                char *code1 = cat(code0,$$.name, " = ", "\"", $1.symbol->value);
+                printf("Code1 -> %s\n",code1);
+                
+                sprintf(buffer, "char* temp = malloc(strlen(t%d) + strlen(t%d) + 1);\nstrcat(temp,t%d);\nstrcat(temp,t%d);\nt%d = temp;\n",temp_var-1,temp_var-2,temp_var-1,temp_var-2,temp_var-1);
+                //char* temp = malloc(strlen(temp_var-1) + strlen(temp_var-2) + 1);
+                //strcat(temp,temp_var-1);
+                //strcat(temp,temp_var-2);
+                printf("BUFFER -> %s\n",buffer);
+
+                printf("SOLUCAO ->%s",$3.symbol->value);
+                char *code2 = cat(code1,"","", "\";\n", buffer);
+                printf("\n\nCode2 -> %s\n\n",code2);
+                $$.rec = createRecord(code2, "");
+            }else if(!strcmp($1.symbol->type,"literal") && !strcmp($3.symbol->type,"variable")){
+                printf("ENTREI 03\n");
+                printf("nao eh variable: %s ---- eh variable: %s\n", $1.name, $3.name);
+                strcat(temp,$1.symbol->value);
+                strcat(temp,$3.symbol->value);
+                strcat(temp,"\"");
+            }
+            //strcat($1.symbol->value, $3.symbol->value);
+            printf("TIPO PEGANDO -> %s\n", $3.symbol->type);
+            printf("String Concatenada -> %s\n", temp);
+            strcpy($$.symbol->value, temp);
+
+            
 //   int tam;
 //   char * output;
 
@@ -735,11 +783,16 @@ expr : ID dimen_ind_op
 //   }
   
 //   sprintf(output, "%s%s%s%s%s", s1, s2, s3, s4, s5);
-
-            char *code0 = cat($1.rec->code, $3.rec->code, $1.type, "", "");
-            char *code1 = cat(code0, " ", $$.name, " = ", $1.name);
-            char *code2 = cat(code1, $2.name, $3.name, ";\n", "");
-            $$.rec = createRecord(code2, "");
+           
+            //sprintf($$.name, "t%d", temp_var);
+            //temp_var++;
+            //char *code0 = cat($1.rec->code, $3.rec->code, isString($1.type), "", " ");
+            //printf("Code0 -> %s\n",code0);
+            //char *code1 = cat(code0,$$.name, " = ", "\"", $1.symbol->value);
+            //printf("Code1 -> %s\n",code1);
+            //char *code2 = cat(code1,"", "", $3.symbol->value, "\";\n");
+            //printf("Code2 -> %s\n",code2);
+            //$$.rec = createRecord(code2, "");
           }
 
           $$.nd = mknode($1.nd, $3.nd, $2.name);
@@ -817,6 +870,27 @@ expr : ID dimen_ind_op
             $$.symbol = malloc(sizeof(struct bucket));
             strcpy($$.symbol->value,$4.symbol->value);
           
+            // int x = -42;
+            // int length = snprintf( NULL, 0, "%d", x );
+            // char* str = malloc( length + 1 );
+            // snprintf( str, length + 1, "%d", x );
+
+            sprintf(buffer, "int t%d = %s;\n", temp_var++, $4.name);
+            char *code0 = cat(buffer, "", "", "", "");
+
+            sprintf(buffer, "int t%d = snprintf(NULL, 0, \"%%d\", t%d);\n", temp_var, temp_var-1);
+            char *code1 = cat(code0, buffer, "", "", "");
+
+            sprintf($$.name, "t%d", ++temp_var);
+            sprintf(buffer, "char* %s = malloc(t%d+1);\n", $$.name, temp_var-1);
+            char *code2 = cat(code1, buffer, "", "", "");
+
+            sprintf(buffer, "snprintf(%s, t%d+1, \"%%d\", t%d);\n", $$.name, temp_var-1, temp_var-2);
+            char *code3 = cat("// begin int_to_string\n", code2, buffer, "// end int_to_string\n", "");
+            temp_var++;
+            $$.rec = createRecord(code3, "");
+            strcpy($$.symbol->type,"literal");
+
           } else if(check_types($2.name,$4.type) == DOUBLE_TO_STRING){
             $$.symbol = malloc(sizeof(struct bucket));
             strcpy($$.symbol->value,$4.symbol->value);
@@ -905,7 +979,7 @@ num_expr : ID
            | num_expr PLUS num_expr
            {
                 check_types_expr($1.type, $3.type, $2.name);
-                $$.nd = mknode($1.nd, $3.nd, $2.name);
+                // $$.nd = mknode($1.nd, $3.nd, $2.name);
            }
            | num_expr MINUS num_expr
            {
@@ -948,8 +1022,10 @@ while_stmt : WHILE LPAREN condition RPAREN {sprintf(auxScope,"%d",idScope); push
 
 if_stmt : IF LPAREN condition RPAREN LBRACE {sprintf(auxScope,"%d",idScope); push(scopes, auxScope); idScope++;} stmt_list RBRACE {pop(scopes);} else_stmt_opt
           {
-             struct node *temp = mknode($7.nd, $10.nd, "body");
-             $$.nd = mknode($3.nd, temp, "if-else");
+            struct node *temp = mknode($7.nd, $10.nd, "body");
+            $$.nd = mknode($3.nd, temp, "if-else");
+            char *code = cat("if","","","","");
+            $$.rec = createRecord(code, "");
           }
         ;
 
@@ -988,8 +1064,36 @@ print_stmt : PRINT LPAREN expr RPAREN
              {
                 if(!strcmp($3.type, "string")){
                     $$.nd = mknode($3.nd, NULL, $1.name);
-                    char *code = cat($3.rec->code, "printf(\"%s\", ", $3.name, ");\n", "");
-                    $$.rec = createRecord(code, "");
+                    /*
+                    if(!strcmp($3.name,"\\n")){
+                        printf("LOG 05\n");
+                        char* code = cat($3.rec->code, "printf(\"\\n\");", "", "\n", "");
+                        printf("LOG 06\n");
+                        $$.rec = createRecord(code, "");
+                        printf("LOG 07\n");
+                    }else{
+                        printf("LOG 08\n");
+                        char* code = cat($3.rec->code, "printf(\"%s\", \"", $3.name, "\");\n", "");
+                        $$.rec = createRecord(code, "");
+                    }
+                    */
+                    //char* code = cat($3.rec->code, "printf(\"%s\", \"", $3.name, "\");\n", "");
+                    /*
+                    if(!isLiteralString($3.name)){
+                        char* code = cat($3.rec->code, "printf(\"%s\", \"", $3.name, "\");\n", "");
+                        $$.rec = createRecord(code, "");
+                    }else{
+                        char* code = cat($3.rec->code, "printf(\"%s\", ", $3.name, ");\n", "");
+                        $$.rec = createRecord(code, "");
+                    }
+                    */
+                    if(!strcmp($3.symbol->type,"literal")){
+                        char* code = cat($3.rec->code, "printf(\"%s\", \"", $3.name, "\");\n", "");
+                        $$.rec = createRecord(code, "");
+                    }else{
+                        char* code = cat($3.rec->code, "printf(\"%s\", ", $3.name, ");\n", "");
+                        $$.rec = createRecord(code, "");
+                    }
                 } else {
                     printf("error: function print only take elements of string type.\n");
                     exit(0);
@@ -998,8 +1102,26 @@ print_stmt : PRINT LPAREN expr RPAREN
              ;
 
 scan_stmt : SCAN LPAREN ID dimen_ind_op RPAREN
-            {
-               $$.nd = mknode($4.nd, NULL, $1.name);
+            {   
+                $$.nd = mknode($4.nd, NULL, $1.name);
+                printf("ID NAME -> %s\n",$3.name);
+
+                struct bucket *b = check_undeclared($3.name);
+                printf("ID TIPO -> %s\n",b->datatype);
+
+                if(!strcmp(b->datatype,"int")){
+                    char* code = cat("scanf(\"%i\", &", $3.name, ");" , "", "");
+                    $$.rec = createRecord(code, "");
+                }else if(!strcmp(b->datatype,"double")){
+                    char* code = cat("scanf(\"%f\", &", $3.name, ");" , "", "");
+                    $$.rec = createRecord(code, "");
+                }else if(!strcmp(b->datatype,"string")){
+                    char* code = cat("scanf(\"%s\", &", $3.name, ");" , "", "");
+                    $$.rec = createRecord(code, "");
+                }else if(!strcmp(b->datatype,"bool")){
+                    char* code = cat("scanf(\"%i\", &", $3.name, ");" , "", "");
+                    $$.rec = createRecord(code, "");
+                }
             }
             ; 
 
@@ -1197,6 +1319,29 @@ void RemoveChars(char *s, char c)
     s[writer]=0;
 }
 
+int isLiteralString(char* str){
+    struct bucket *symbol;
+    struct stack_bucket *sb = scopes->head;
+
+    // Se não encontra no escopo atual, busca no próximo
+    while (sb != NULL)
+    {
+        sprintf(buffer, "%s@%s", sb->text, str);
+        symbol = lookup(buffer);
+        if(symbol == NULL) {
+            sb = sb->next;
+        } else {
+            break;
+        }
+    }
+
+    if(symbol == NULL) {
+        return 0;
+    }else{
+        return 1;
+    }
+}
+
 struct bucket* mkbucket(){
 
 }
@@ -1303,6 +1448,13 @@ int check_types_assign(char *type1, char *type2, char *id) {
     return 0;
 }
 
+char* isString(char* str){
+    if(!strcmp(str,"string")){
+        return "char*";
+    }
+    return str;
+}
+
 bucket *check_undeclared(char *id) {
     
     struct bucket *symbol;
@@ -1379,7 +1531,8 @@ void print_help(char *compilername) {
 
 void code_includes() {
     fprintf(yyout, "#include <stdio.h>\n");
-    fprintf(yyout, "#include <stdlib.h>\n\n");
+    fprintf(yyout, "#include <stdlib.h>\n");
+    fprintf(yyout, "#include <string.h>\n\n");
 }
 
 char * cat(char * s1, char * s2, char * s3, char * s4, char * s5){
