@@ -1,9 +1,32 @@
-function main(int a) : int
-{
-    double x = 10.5;
-    double y = 25.5;
-    int c = 20;
+function main() : int
+{   
+    
+    double x;
+    scan(x);
+    double y;
+    scan(y);
+    double c;
+    scan(c);
     double r = x*x-y+c;
+
+    if(1 == 2){
+        int x = 10;
+        print((string)x);
+        print("\n");
+    }else{
+        int x = 11;
+        print((string)x);
+        print("\n");
+    }
+
+    print((string)x);
+
+    print("\n");
 
     print((string) r);
 }
+
+//numero negativo scan
+//else n tem salto pra sair
+//escopo variaveis repetidas
+//ajeitar formatacao da matriz

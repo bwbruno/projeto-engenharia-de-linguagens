@@ -1,5 +1,5 @@
 # Simple++ reference 
-Linguagem implementada com Lex e Yacc para a disciplina de Engenharia de Linguagens do Bacharelado em Tecnologia da Informação da Universidade Federal do RN
+Essa é uma linguagem implementada como projeto da disciplina de Engenharia de Linguagens do Bacharelado em Tecnologia da Informação da UFRN. A ideia por trás do Simple++ é tentar tornar a sintaxe do uso de ponteiros mais amigável e de simples entendimento. 
 
 ## Como compilar
 No terminal, com o lex, yacc ou bison instalados, dentro da pasta ***src***:
@@ -66,6 +66,55 @@ ptr.address() // retorna o proprio endereco
 ptr.value() // retorna o endereco de x
 ptr.pointedValue() // retorna 20
 ```
+## Declaração de Arrays
+Um array é uma coleção de elementos do mesmo tipo colocados continuamente em posições de memória e que
+podem ser acessados individualmente e referenciados usando um index como identificador único.
+
+### Estrutura de declaração
+```c++
+tipo nome [elementos];
+```
+### Como inserir elementos em um array de 5 posições
+```c++
+int[5] foo;
+
+for(int i = 0 ; i < 5 ; i++){
+  scan(foo[i]);
+}
+
+```
+### Inicializando arrays
+```c++
+int[5] foo = {16, 2, 77, 40, 12071};
+```
+
+### Acessando itens do array
+```c++
+int x = foo[2];
+print(x) //return 77
+```
+
+## Array Multidimensional
+Array multidimensional pode ser descrito com um "array de array".
+
+### Inicializando arrays multidimensionais
+```c++
+int[3][3] foo;
+```
+```c++
+int[3][3] foo {{1, 2, 3},{4, 5, 6},{7, 8, 9}};
+```
+
+### Acessando itens do array multidimensional
+```c++
+for (n=0; n<3; n++) {
+    for (m=0; m<3; m++)
+    {
+      print( foo[n][m] );
+    }
+}
+```
+
 
 ## Estruturas
 | Tipo   | Descrição |
@@ -74,12 +123,23 @@ ptr.pointedValue() // retorna 20
 | function  | Classe que pode agrupar qualquer tipo de elemento chamável |
 
 
-## Funções 
+## Funções
+
+### Declaração de funções
+```c++
+function main() : int
+{
+  return 2;
+}
+```
+## I/O Streams
+
 | Sintaxe   | Descrição |
 |---------|-------------------------------------|
 | print(string / item)  | imprime uma mensagem em tela |
 | printArray(array)  | imprime um array em tela |
-"scan"                { return SCAN; }
+| printArray(scan)  | Lê um valor digitado |
+              
 
 ## Controle de fluxo
 
@@ -200,8 +260,73 @@ retorna TRUE se a condição for satisfeita o FALSE caso não seja.
 | /= | Variável = Variável / Expressão | a /= 2; | // a = 10 
 | %= | Variável = Variável % Expressão | a %= 2; | // a = 0 
 
+## Verificações realizadas
+
+### Multiplas declarações
+```c++
+  function main() : int
+  {
+      a = 2;
+      int b = 1;
+      int b = 2;    // Erro de declaração em duplicidade
+  }
+```
+### Erro de tipo
+```c++
+function main() : int
+{
+    a = 1;
+    int b = "brasil"; // Erro de atribuição a um tipo diferente do declarado
+}
+```
+### Erro de tipo em uma expressão
+```c++
+function main() : int
+{
+    a = 1 + "brasil"; // Soma de int com string não é permitido
+}
+```
+### Erro de tipo no retorno de funções
+```c++
+function iAmAFloat() : float
+{
+    return 10.5;
+}
+
+function main() : int
+{
+    int a = iAmAFloat(); // Erro: Retorno float sendo atribuído a um int
+}
+```
+
+### Variável não declarada
+```c++
+function main() : int
+{
+    int a = 2;
+    print(a);
+    
+    b = 0; // Erro: Variável não foi declarada
+    print(b);
+}
+```
+
 ## License
 
 MIT
 
 **Free Software, Hell Yeah!**
+
+
+
+
+
+- Documentação do compilador contendo no mínimo:
+  (1) Introdução: visão geral do projeto
+  (2) Design da implementação:
+      (A) Transformação do código-fonte em unidades léxicas;
+      (B) Representação de símbolos, tabela de símbolos e funções associadas;
+      (C) Tratamento de estruturas condicionais e de repetição;
+      (D) Tratamento de subprogramas;
+      (E) Verificações realizadas (tipos, faixas, declaração em duplicidade, etc).
+  (3) Instruções de uso do compilador.
