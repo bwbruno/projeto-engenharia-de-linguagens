@@ -33,7 +33,6 @@ $ make build test-all
 | Tipo   | Descrição |
 |---------|-------------------------------------|
 | int  | Tipo inteiro                      |
-| float | single precision floating-point type |
 | double   | double precision floating-point type |
 | bool | true ou false |
 | string | used to represent and manipulate a sequence of characters. |
