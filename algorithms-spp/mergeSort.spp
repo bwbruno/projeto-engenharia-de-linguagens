@@ -5,7 +5,7 @@ procedure merge(pointer<int> arr, int l, int m, int r)
     int n2 = r - m;
  
     int[n1] L;
-    int[n2] M;
+    int[n2] R;
  
     for (i = 0; i < n1; i++){
         L[i] = arr[l + i];
@@ -17,6 +17,7 @@ procedure merge(pointer<int> arr, int l, int m, int r)
     i = 0;
     j = 0;
     k = l;
+    
     while (i < n1 & j < n2) {
         if (L[i] <= R[j]) {
             arr[k] = L[i];
@@ -65,7 +66,7 @@ procedure printArrayProced(pointer<int> A, int size)
 function main() : int
 {
     int[] arr = { 12, 11, 13, 5, 6, 7 };
-    int arr_size = sizeof(arr) / sizeof(arr[0]);
+    int arr_size;
     print("Given array is \n");
     pointer<int> ptr;
     ptr.pointTo(arr);

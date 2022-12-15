@@ -1,0 +1,20 @@
+
+Scope@Id                  Datatype        Type           Value Line Numbers
+------------------------- --------------- -------------- ----- -----------------
+0@main                    int             function            25 
+1@count                   int             variable       0    26 
+0@a                       int             variable       5    7 
+0@b                       double          variable       6.7000009 
+0@c                       int             variable       3    13 
+0@d                       int             variable       4    15 
+0@e                       int             variable       4    17 
+0@f                       double          variable       4.00000019 
+0@g                       int             variable       42   21 
+0@h                       double          variable       38   23 
+0@str1                    string          variable       paulovitor3 
+0@str2                    string          variable       paulo5 
+0@str3                    string          variable       4.5  11 
+1@b                       int             variable            25 
+1@c                       int             variable       ÿ   25 
+0@str                     string          variable       paulo21 
+

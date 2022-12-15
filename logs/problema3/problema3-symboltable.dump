@@ -1,0 +1,26 @@
+
+Scope@Id                  Datatype        Type           Value Line Numbers
+------------------------- --------------- -------------- ----- -----------------
+10@i                      int             variable       0    55 
+19@j                      int             variable       0    83 
+0@main                    int             function            1 
+6@j                       int             variable       0    29 
+19@soma                   int             variable       0    84 
+4@j                       int             variable       0    21 
+13@j                      int             variable       0    64 
+11@j                      int             variable       0    56 
+18@c                      int             variable       -1   88 
+18@i                      int             variable       0    82 
+5@c                       int             variable       -1   34 
+5@i                       int             variable       0    28 
+1@linhasA                 int             variable            4 
+1@linhasB                 int             variable            5 
+3@i                       int             variable       0    20 
+1@colunasA                int             variable            4 
+1@colunasB                int             variable            5 
+12@c                      int             variable       -1   68 
+12@i                      int             variable       0    63 
+1@soma                    int             variable       0    76 
+1@matrizA                 int[linhasA][colunasA] variable            18 
+1@matrizB                 int[linhasB][colunasB] variable            53 
+

@@ -1,0 +1,7 @@
+int a;
+
+function main() : int
+{
+    a = 1;
+    int b = "brasil";
+}

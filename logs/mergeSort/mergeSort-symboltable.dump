@@ -1,0 +1,29 @@
+
+Scope@Id                  Datatype        Type           Line Numbers
+------------------------- --------------- -------------- -----------------
+9@arr                     int             variable       46 
+0@main                    int             function       66 
+10@m                      int             variable       49 
+0@merge                                   procedure      1 
+1@arr                     int             variable       1 
+0@printArrayProced                        procedure      56 
+11@A                      int             variable       56 
+9@l                       int             variable       46 
+1@n1                      int             variable       4 
+1@n2                      int             variable       5 
+11@i                      int             variable       58 
+9@r                       int             variable       46 
+1@L                       int[n1]         variable       7 
+1@R                       int[n2]         variable       8 
+13@arr_size               int             variable       69 
+13@arr                    int[60]         variable       68 
+13@ptr                    int             variable       71 
+0@mergeSort                               procedure      46 
+1@i                       int             variable       3 
+1@j                       int             variable       3 
+1@k                       int             variable       3 
+1@l                       int             variable       1 
+1@m                       int             variable       1 
+1@r                       int             variable       1 
+11@size                   int             variable       56 
+

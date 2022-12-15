@@ -1,0 +1,8 @@
+function main() : int
+{
+    int a = 2;
+    print(a);
+    
+    b = 0;
+    print(b);
+}

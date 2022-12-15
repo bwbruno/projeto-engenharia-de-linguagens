@@ -1,39 +1,52 @@
-TARGET_EXEC := parser.exe
+# Reference: 
+# https://bytes.usc.edu/cs104/wiki/makefile/
+# https://www.gnu.org/savannah-checkouts/gnu/make/manual/html_node/Text-Functions.html
+
+COMPILER=parser.exe
+
+DIR_SOURCE=../algorithms-spp
+DIR_BROKEN_SOURCE=../algorithms-spp/errors
+DIR_LOGS=../logs
+DIR_TESTS=../tests
+FILE_STACK=$(DIR_LOGS)/$(@:test-%=%)/$(@:test-%=%)-stack.dump
+FILE_SYMBOLTABLE=$(DIR_LOGS)/$(@:test-%=%)/$(@:test-%=%)-symboltable.dump
+
+#OPTIONS=-p
+OPTIONS=--dump-stack=$(FILE_STACK) -t $(FILE_SYMBOLTABLE)
+
+ALGORITHMS=test-generico test-problema1 test-problema2 test-problema3 test-mergeSort test-switchCase test-escopos test-cast
+BROKEN_ALGORITHMS=test-broken-multipleDeclarations test-broken-undeclared test-broken-typeErrorOnExpression test-broken-typeErrorOnAssignment
 
 build:
 	bison -d -v -g parser.y
 	flex lexer.l
-	gcc parser.tab.c lex.yy.c -o $(TARGET_EXEC) -g
+	gcc parser.tab.c lex.yy.c -o $(COMPILER) -g
 
 clean:
 	rm *.tab.* *.yy.c *.out *.exe *.dot
 
 exec:
-	./$(TARGET_EXEC)
+	./$(COMPILER)
 
-test-all: test-generico test-problema1 test-problema2 test-problema3 test-mergeSort test-switchCase
+setup-log-and-test-folders:
+	ls ../algorithms-spp | awk '/\.spp$$/ { printf "mkdir -p ../logs/" } { sub(/\.spp$$/, "") } { print }' | sh
+	ls ../algorithms-spp | awk '/\.spp$$/ { printf "mkdir -p ../tests/" } { sub(/\.spp$$/, "") } { print }' | sh
 
-test-generico:
-	./$(TARGET_EXEC) < ../algorithms-spp/generico.spp
+test-all: $(ALGORITHMS)
 
-test-mergeSort:
-	./$(TARGET_EXEC) < ../algorithms-spp/mergeSort.spp
+test-broken-all: $(BROKEN_ALGORITHMS)
 
-test-problema1:
-	./$(TARGET_EXEC) < ../algorithms-spp/problema1.spp
+RESET=\x1B[0m
+BOLD=\x1B[1m
+CYAN=\x1B[36m
 
-test-problema2:
-	./$(TARGET_EXEC) < ../algorithms-spp/problema2.spp
+$(ALGORITHMS):
+	@echo -e '\n$(CYAN)$(BOLD)make $@$(RESET)'
+	./$(COMPILER) $(OPTIONS) -i $(DIR_SOURCE)/$(@:test-%=%).spp -o $(DIR_SOURCE)/$(@:test-%=%).out.c
 
-test-problema3:
-	./$(TARGET_EXEC) < ../algorithms-spp/problema3.spp
+$(BROKEN_ALGORITHMS):
+	@echo -e '\n$(CYAN)$(BOLD)make $@$(RESET)'
+	./$(COMPILER) $(DIR_BROKEN_SOURCE)/$(@:test-broken-%=%).spp
 
-test-switchCase:
-	./$(TARGET_EXEC) < ../algorithms-spp/switchCase.spp
-
-test-teste:
-	./$(TARGET_EXEC) < ../algorithms-spp/teste.spp
-
-test-escopos:
-	./$(TARGET_EXEC) --dump-symboltable ../tests/escopos/symboltable-result < ../algorithms-spp/escopos.spp
-	sort ../tests/escopos/symboltable-result > ../tests/escopos/symboltable-result-sorted
+#test-all-generate:
+#	make build && make test-problema3 && gcc ../algorithms-spp/problema3.out.c && { cat ../tests/problema3/input; } | ./a.out && make build && make test-problema2 && gcc ../algorithms-spp/problema2.out.c && ./a.out  && make build && make test-problema1 && gcc ../algorithms-spp/problema1.out.c && ./a.out

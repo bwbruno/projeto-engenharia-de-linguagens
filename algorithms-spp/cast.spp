@@ -1,0 +1,27 @@
+string str = "paulo" + (string) 2;
+
+string str1 = "paulo" + "vitor";
+
+string str2 = "paulo";
+
+int a = 2 + 3;
+
+double b = 3.5 + 3.2;
+
+string str3 = (string) 4.5;
+
+int c = (int) 3.49;
+
+int d = (int) 3.5;
+
+int e = (int) 3.8;
+
+double f = (double) e;
+
+int g = (int) "42";
+
+double h = (double) "38";
+
+function main(int b, int c) : int {
+    int count = 0;
+}

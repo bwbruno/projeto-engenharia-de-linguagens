@@ -6,18 +6,17 @@ function main() : int
     int i51_75 = 0;
     int i76_100 = 0;
 
-
     do {
         scan(input);
 
         if(input >= 0 & input <= 25) {
             i0_25++;
         }
-
+    
         if(input >= 26 & input <= 50) {
             i26_50++;
         }
-
+    
         if(input >= 51 & input <= 75) {
             i51_75++;
         }
@@ -25,14 +24,18 @@ function main() : int
         if(input >= 76 & input <= 100) {
             i76_100++;
         }
-    
+
     } while(input >= 0); 
     
+    print("\n[0, 25]: ");
+    print((string) i0_25);
+    print("\n[26, 50]: ");
+    print((string) i26_50);
+    print("\n[51, 75]: ");
+    print((string) i51_75);
+    print("\n[76, 100]: ");
+    print((string) i76_100);
     print("\n");
-    print("  [0, 25]: " + i0_25);
-    print(" [26, 50]: " + i26_50);
-    print(" [51, 75]: " + i51_75);
-    print("[76, 100]: " + i76_100);
 
     return 0;
 }
