@@ -203,7 +203,7 @@ A instrução switch avalia uma expressão, comparando o valor da expressão com
 string expr = 'Papayas';
 switch (expr) {
   case 'Oranges':
-    console.log('Oranges are $0.59 a pound.');
+    print('Oranges are $0.59 a pound.');
     break;
   case 'Mangoes':
   case 'Papayas':
