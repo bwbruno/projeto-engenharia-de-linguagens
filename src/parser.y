@@ -1058,10 +1058,10 @@ for_args : assign_stmt SEMI_COLON ID comp_op ID SEMI_COLON inc_dec
          }
          ;
 
-inc_dec : ID INCREMENT %prec POSINC { check_undeclared($1.name); }
-        | ID DECREMENT %prec POSDEC { check_undeclared($1.name); }
-        | INCREMENT ID %prec PREINC { check_undeclared($2.name); }
-        | DECREMENT ID %prec PREDEC { check_undeclared($2.name); }
+inc_dec : ID INCREMENT %prec POSINC { check_undeclared($1.name); char* code = cat($1.name,"++;","","",""); $$.rec = createRecord(code,"");}
+        | ID DECREMENT %prec POSDEC { check_undeclared($1.name); char* code = cat($1.name,"--;","","",""); $$.rec = createRecord(code,"");}
+        | INCREMENT ID %prec PREINC { check_undeclared($2.name); char* code = cat("++",$1.name,";","",""); $$.rec = createRecord(code,"");}
+        | DECREMENT ID %prec PREDEC { check_undeclared($2.name); char* code = cat("--",$1.name,";","",""); $$.rec = createRecord(code,"");}
         ;
 
 print_stmt : PRINT LPAREN expr RPAREN
